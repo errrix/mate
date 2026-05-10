@@ -1,0 +1,25 @@
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+@media print {
+    body {
+        background: white;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .container {
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
