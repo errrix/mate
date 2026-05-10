@@ -7,10 +7,12 @@ This project is a Vite + React web app for generating printable math exercises i
 - Entry point: `src/main.jsx`
 - Main app state and screen switching: `src/App.jsx`
 - Settings UI: `src/components/SettingsScreen.jsx`
-- Generated examples UI and print layout: `src/components/ExamplesScreen.jsx`
-- Operation-specific renderers: `src/components/*Example.jsx`
+- Generated examples screen: `src/components/ExamplesScreen.jsx`
+- Printable notebook grid feature: `src/features/notebookGrid`
 - Math generation logic: `src/generators/*Generator.js`
-- Global styles: `src/index.css`, `src/App.css`, and component CSS files
+- Shared generator utilities: `src/generators/numberUtils.js`
+- Tests: `src/**/*.test.js`
+- Styles: plain CSS imports, not CSS Modules
 
 ## Commands
 
@@ -18,11 +20,19 @@ Use `npm.cmd` on Windows PowerShell if `npm` is blocked by Execution Policy.
 
 ```bash
 npm.cmd install
+npm.cmd test
 npm.cmd run build
 npm.cmd run dev
 ```
 
-There is no test suite yet. For now, `npm.cmd run build` is the required verification step after code changes.
+After code changes, run both:
+
+```bash
+npm.cmd test
+npm.cmd run build
+```
+
+`vite build` creates `dist/`; remove it before committing because build output is ignored and should not be part of normal working changes.
 
 ## Working Rules
 
@@ -30,21 +40,27 @@ There is no test suite yet. For now, `npm.cmd run build` is the required verific
 - Keep source files encoded as UTF-8.
 - Preserve Russian UI text unless the task asks to rewrite it.
 - Keep changes small and focused.
-- For generator changes, verify the math constraints directly with small Node scripts or tests.
-- For UI/layout changes, check both screen layout and print behavior when practical.
-- Prefer adding tests before or alongside non-trivial generator fixes.
+- For generator changes, update or add Vitest coverage.
+- For print layout changes, check browser preview when practical and keep DOM/CSS/SVG grid modes using the same placement model.
+- Do not duplicate random/range helpers inside generators; use `src/generators/numberUtils.js`.
 
-## Known Issues
+## Print Grid Notes
 
-- Addition/subtraction notebook grid currently computes digit positions in a way that can reverse displayed digits.
-- Multiplication `maxResult` is not guaranteed when the selected digit ranges make the limit impossible.
-- Division generation retries by decrementing the loop counter and has no explicit attempt limit.
-- README mentions CSS Modules, but the project uses regular global CSS imports.
+Addition and subtraction use `src/features/notebookGrid`.
 
-## Suggested Task Order
+- `pageModel.js` defines the physical A4 grid model.
+- `placement.js` converts examples into `{ row, col, kind, value }` cells.
+- `NotebookGrid.jsx` chooses a renderer by mode.
+- Render modes:
+  - `dom`: DOM cells baseline.
+  - `css`: explicit CSS line layer plus overlayed digits.
+  - `svg`: SVG lines and text.
 
-1. Add a small test setup for generator functions.
-2. Fix notebook-grid digit ordering.
-3. Make multiplication constraints deterministic and handle impossible settings clearly.
-4. Make division generation bounded and predictable.
-5. Improve print layout only after functional behavior is covered.
+All render modes must share the same placement output. Do not fix only one renderer unless the bug is renderer-specific.
+
+## Current Priorities
+
+1. Refactor `SettingsScreen` into config-driven controls.
+2. Remove dead components if `AdditionExample` and `SubtractionExample` remain unused.
+3. Improve user-facing validation/errors for impossible settings.
+4. Keep print grid changes isolated and test placement logic directly.
