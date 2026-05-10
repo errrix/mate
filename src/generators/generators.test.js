@@ -23,6 +23,20 @@ describe('generateAddition', () => {
             example.numbers.forEach((number) => expectDigits(number, 2));
         }
     });
+
+    test('creates decimal addition examples when requested', () => {
+        const examples = generateAddition(12, 2, 3, true);
+
+        expect(examples).toHaveLength(12);
+        for (const example of examples) {
+            expect(example.type).toBe('addition');
+            expect(example.operator).toBe('+');
+            expect(example.numbers).toHaveLength(3);
+            example.numbers.forEach((number) => {
+                expect(number).toMatch(/^\d{2},\d{2}$/);
+            });
+        }
+    });
 });
 
 describe('generateSubtraction', () => {

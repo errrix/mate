@@ -22,7 +22,8 @@ function App() {
                 const additionExamples = generateAddition(
                     settings.addition.count,
                     settings.addition.digits,
-                    settings.addition.terms
+                    settings.addition.terms,
+                    settings.addition.useDecimals
                 );
                 generatedExamples.push(...additionExamples);
             }

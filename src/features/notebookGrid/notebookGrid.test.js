@@ -20,8 +20,27 @@ describe('notebook placement', () => {
         const parsed = parseVerticalNumbers({ numbers: [123, 45] });
 
         expect(parsed.alignedDigits).toEqual([
-            [1, 2, 3],
-            [null, 4, 5]
+            [{ value: '1' }, { value: '2' }, { value: '3' }],
+            [null, { value: '4' }, { value: '5' }]
+        ]);
+    });
+
+    test('attaches decimal separators to the previous digit and trims trailing zeroes', () => {
+        const parsed = parseVerticalNumbers({ numbers: ['12,37', '4,50'] });
+
+        expect(parsed.alignedDigits).toEqual([
+            [
+                { value: '1' },
+                { value: '2', decimalSeparatorAfter: true },
+                { value: '3' },
+                { value: '7' }
+            ],
+            [
+                null,
+                { value: '4', decimalSeparatorAfter: true },
+                { value: '5' },
+                null
+            ]
         ]);
     });
 
@@ -41,6 +60,34 @@ describe('notebook placement', () => {
         expect(operatorCell).toMatchObject({ row: 2, kind: 'operator', value: '+' });
         expect(lineCells).toHaveLength(3);
         expect(lineCells.every((cell) => cell.row === 3)).toBe(true);
+    });
+
+    test('places decimal separators without adding columns for them', () => {
+        const placement = buildNotebookPlacement(
+            [{ example: { numbers: ['12,30', '4,56'], type: 'addition' }, index: 0 }],
+            '+'
+        );
+
+        const digitCells = placement.cells.filter((cell) => cell.kind === 'digit');
+        const decimalCells = digitCells.filter((cell) => cell.decimalSeparatorAfter);
+        const lineCells = placement.cells.filter((cell) => cell.kind === 'line');
+
+        expect(digitCells.map((cell) => cell.value)).toEqual(['1', '2', '3', '4', '5', '6']);
+        expect(decimalCells.map((cell) => cell.value)).toEqual(['2', '4']);
+        expect(lineCells).toHaveLength(4);
+    });
+
+    test('keeps decimal separators in the same column', () => {
+        const placement = buildNotebookPlacement(
+            [{ example: { numbers: ['426,30', '607,3'], type: 'addition' }, index: 0 }],
+            '+'
+        );
+
+        const decimalCells = placement.cells.filter((cell) => cell.decimalSeparatorAfter);
+
+        expect(decimalCells).toHaveLength(2);
+        expect(decimalCells[0].col).toBe(decimalCells[1].col);
+        expect(decimalCells.map((cell) => cell.value)).toEqual(['6', '7']);
     });
 
     test('reports overflow instead of scaling when content exceeds one page', () => {

@@ -84,6 +84,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: visible;
 }
 
 .notebook-cell-operator,
@@ -142,6 +144,8 @@
     color: var(--notebook-text);
     font-family: 'Courier New', monospace;
     font-weight: 600;
+    position: relative;
+    overflow: visible;
 }
 
 .notebook-overlay-operator {
@@ -150,6 +154,14 @@
 
 .notebook-overlay-digit {
     font-size: 3.4mm;
+}
+
+.notebook-decimal-separator {
+    position: absolute;
+    left: 15px;
+    top: 11px;
+    font-size: 2.8mm;
+    line-height: 1;
 }
 
 .notebook-overlay-line {
@@ -195,6 +207,14 @@
 
 .notebook-svg-operator {
     font-size: 3.8px;
+}
+
+.notebook-svg-decimal-separator {
+    fill: #222;
+    font-family: 'Courier New', monospace;
+    font-size: 2.8px;
+    font-weight: 600;
+    dominant-baseline: alphabetic;
 }
 
 .examples-container {

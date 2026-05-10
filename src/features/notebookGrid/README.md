@@ -1,6 +1,6 @@
 # Notebook Grid Feature
 
-This feature renders printable notebook-style grids for addition and subtraction.
+This feature renders printable notebook-style grids for addition, subtraction, and multiplication.
 
 ## Core Rule
 
@@ -52,7 +52,7 @@ Cell coordinates are zero-based. `row` and `col` map directly to the `5mm` grid.
 Cell kinds:
 
 - `digit`: a single digit.
-- `operator`: `+` or `−`.
+- `operator`: `+`, `−`, or `×`.
 - `line`: one cell segment of the answer line.
 
 The answer line belongs on the top edge of its row. This keeps DOM, CSS, and SVG output aligned.

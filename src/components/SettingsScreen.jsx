@@ -11,7 +11,8 @@ export function SettingsScreen({ onGenerate }) {
             enabled: false,
             count: 10,
             digits: 2,
-            terms: 2
+            terms: 2,
+            useDecimals: false
         },
         subtraction: {
             enabled: false,
@@ -33,7 +34,6 @@ export function SettingsScreen({ onGenerate }) {
             divisorDigits: 1
         }
     });
-
     const handleToggle = (operation) => {
         setSettings(prev => ({
             ...prev,
@@ -45,11 +45,18 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleChange = (operation, field, value) => {
+        const parsedValue = parseInt(value) || value;
+
         setSettings(prev => ({
             ...prev,
             [operation]: {
                 ...prev[operation],
-                [field]: parseInt(value) || value
+                [field]: parsedValue,
+                ...(operation === 'subtraction'
+                    && field === 'minuendDigits'
+                    && prev.subtraction.subtrahendDigits > parsedValue
+                    ? { subtrahendDigits: parsedValue }
+                    : {})
             }
         }));
     };
@@ -134,6 +141,16 @@ export function SettingsScreen({ onGenerate }) {
                             <option value="5">5</option>
                         </select>
                     </div>
+                    <div className="setting-group checkbox-setting">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={settings.addition.useDecimals}
+                                onChange={(e) => handleChange('addition', 'useDecimals', e.target.checked)}
+                            />
+                            Числа с запятой
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -178,9 +195,9 @@ export function SettingsScreen({ onGenerate }) {
                             onChange={(e) => handleChange('subtraction', 'subtrahendDigits', e.target.value)}
                         >
                             <option value="1">Однозначные (1-9)</option>
-                            <option value="2">Двузначные (10-99)</option>
-                            <option value="3">Трехзначные (100-999)</option>
-                            <option value="4">Четырехзначные (1000-9999)</option>
+                            <option value="2" disabled={settings.subtraction.minuendDigits < 2}>Двузначные (10-99)</option>
+                            <option value="3" disabled={settings.subtraction.minuendDigits < 3}>Трехзначные (100-999)</option>
+                            <option value="4" disabled={settings.subtraction.minuendDigits < 4}>Четырехзначные (1000-9999)</option>
                         </select>
                     </div>
                 </div>

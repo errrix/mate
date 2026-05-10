@@ -16,6 +16,23 @@ function cellClassName(cell) {
     return classNames.join(' ');
 }
 
+function renderCellValue(cell) {
+    if (!cell?.value) {
+        return '';
+    }
+
+    if (!cell.decimalSeparatorAfter) {
+        return cell.value;
+    }
+
+    return (
+        <>
+            <span>{cell.value}</span>
+            <span className="notebook-decimal-separator">,</span>
+        </>
+    );
+}
+
 export function DomNotebookGrid({ placement }) {
     const { page, cells } = placement;
     const cellMap = new Map(cells.map((cell) => [`${cell.row}-${cell.col}`, cell]));
@@ -27,7 +44,7 @@ export function DomNotebookGrid({ placement }) {
             const cell = cellMap.get(key);
             renderedCells.push(
                 <div key={key} className={cellClassName(cell)}>
-                    {cell?.value ?? ''}
+                    {renderCellValue(cell)}
                 </div>
             );
         }

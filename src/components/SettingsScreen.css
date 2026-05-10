@@ -80,6 +80,18 @@ h1 {
     border-color: #667eea;
 }
 
+.checkbox-setting label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.checkbox-setting input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
 .button-group {
     display: flex;
     gap: 15px;

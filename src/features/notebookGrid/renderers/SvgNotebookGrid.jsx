@@ -53,15 +53,26 @@ export function SvgNotebookGrid({ placement }) {
                     }
 
                     return (
-                        <text
-                            key={`text-${cell.row}-${cell.col}-${index}`}
-                            className={`notebook-svg-${cell.kind}`}
-                            x={cell.col * page.cellSizeMm + page.cellSizeMm / 2}
-                            y={cell.row * page.cellSizeMm + page.cellSizeMm * 0.68}
-                            textAnchor={textAnchor(cell)}
-                        >
-                            {cell.value}
-                        </text>
+                        <g key={`text-${cell.row}-${cell.col}-${index}`}>
+                            <text
+                                className={`notebook-svg-${cell.kind}`}
+                                x={cell.col * page.cellSizeMm + page.cellSizeMm / 2}
+                                y={cell.row * page.cellSizeMm + page.cellSizeMm * 0.68}
+                                textAnchor={textAnchor(cell)}
+                            >
+                                {cell.value}
+                            </text>
+                            {cell.decimalSeparatorAfter && (
+                                <text
+                                    className="notebook-svg-decimal-separator"
+                                    x={cell.col * page.cellSizeMm + 3.97}
+                                    y={cell.row * page.cellSizeMm + 5.3}
+                                    textAnchor="start"
+                                >
+                                    ,
+                                </text>
+                            )}
+                        </g>
                     );
                 })}
             </svg>

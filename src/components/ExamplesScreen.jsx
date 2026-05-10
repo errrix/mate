@@ -1,13 +1,10 @@
 import React from 'react';
-import { MultiplicationExample } from './MultiplicationExample';
 import { DivisionExample } from './DivisionExample';
 import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
 import './ExamplesScreen.css';
 
 function renderExample(example, index) {
     switch (example.type) {
-        case 'multiplication':
-            return <MultiplicationExample key={index} example={example} />;
         case 'division':
             return <DivisionExample key={index} example={example} />;
         default:
@@ -51,6 +48,18 @@ export function ExamplesScreen({ examples, gridMode = 'dom', onBack }) {
                             title="Вычитание"
                             items={items}
                             operator="−"
+                            mode={gridMode}
+                        />
+                    );
+                }
+
+                if (type === 'multiplication') {
+                    return (
+                        <NotebookGrid
+                            key={type}
+                            title="Умножение"
+                            items={items}
+                            operator="×"
                             mode={gridMode}
                         />
                     );

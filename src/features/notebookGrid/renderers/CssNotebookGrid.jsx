@@ -4,6 +4,19 @@ function itemClassName(cell) {
     return `notebook-overlay-item notebook-overlay-${cell.kind}`;
 }
 
+function renderItemValue(cell) {
+    if (!cell.decimalSeparatorAfter) {
+        return cell.value;
+    }
+
+    return (
+        <>
+            <span>{cell.value}</span>
+            <span className="notebook-decimal-separator">,</span>
+        </>
+    );
+}
+
 export function CssNotebookGrid({ placement }) {
     const { page, cells } = placement;
     const verticalLines = Array.from({ length: page.cols + 1 }, (_, col) => col);
@@ -43,7 +56,7 @@ export function CssNotebookGrid({ placement }) {
                             gridRow: cell.row + 1
                         }}
                     >
-                        {cell.value}
+                        {renderItemValue(cell)}
                     </div>
                 ))}
             </div>

@@ -7,14 +7,65 @@ export const DEFAULT_NOTEBOOK_LAYOUT = {
     minColsPerExample: 6
 };
 
+function parsePrintableNumberParts(number) {
+    const text = String(number);
+    const decimalMatch = text.match(/^(\d+)[,.](\d+)$/);
+
+    if (!decimalMatch) {
+        return {
+            integerTokens: text.split('').map((value) => ({ value })),
+            fractionTokens: [],
+            hasDecimal: false
+        };
+    }
+
+    const [, integerPart, decimalPart] = decimalMatch;
+    const trimmedDecimalPart = decimalPart.replace(/0+$/, '');
+    const integerTokens = integerPart.split('').map((value) => ({ value }));
+    const fractionTokens = trimmedDecimalPart.split('').map((value) => ({ value }));
+
+    if (fractionTokens.length > 0) {
+        integerTokens[integerTokens.length - 1] = {
+            ...integerTokens[integerTokens.length - 1],
+            decimalSeparatorAfter: true
+        };
+    }
+
+    return {
+        integerTokens,
+        fractionTokens,
+        hasDecimal: fractionTokens.length > 0
+    };
+}
+
 export function parseVerticalNumbers(example) {
     const numberDigits = example.numbers.map((number) => (
-        number.toString().split('').map(Number)
+        parsePrintableNumberParts(number)
     ));
-    const maxLength = Math.max(...numberDigits.map((digits) => digits.length));
+    const hasDecimals = numberDigits.some((digits) => digits.hasDecimal);
+    const maxIntegerLength = Math.max(...numberDigits.map((digits) => digits.integerTokens.length));
+    const maxFractionLength = Math.max(...numberDigits.map((digits) => digits.fractionTokens.length));
+    const maxLength = hasDecimals
+        ? maxIntegerLength + maxFractionLength
+        : Math.max(...numberDigits.map((digits) => digits.integerTokens.length));
     const alignedDigits = numberDigits.map((digits) => {
-        const padding = maxLength - digits.length;
-        return [...Array(padding).fill(null), ...digits];
+        const integerPadding = maxIntegerLength - digits.integerTokens.length;
+
+        if (!hasDecimals) {
+            return [
+                ...Array(integerPadding).fill(null),
+                ...digits.integerTokens
+            ];
+        }
+
+        const fractionPadding = maxFractionLength - digits.fractionTokens.length;
+
+        return [
+            ...Array(integerPadding).fill(null),
+            ...digits.integerTokens,
+            ...digits.fractionTokens,
+            ...Array(fractionPadding).fill(null)
+        ];
     });
 
     return {
@@ -90,7 +141,8 @@ export function buildNotebookPlacement(items, operator, options = {}) {
                     row: startRow + rowIndex,
                     col: startCol + 1 + digitIndex,
                     kind: 'digit',
-                    value: String(digit)
+                    value: digit.value,
+                    decimalSeparatorAfter: digit.decimalSeparatorAfter === true
                 });
             });
         });
