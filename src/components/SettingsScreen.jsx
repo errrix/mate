@@ -6,6 +6,7 @@ import './SettingsScreen.css';
  */
 export function SettingsScreen({ onGenerate }) {
     const [settings, setSettings] = useState({
+        gridMode: 'dom',
         addition: {
             enabled: false,
             count: 10,
@@ -53,6 +54,13 @@ export function SettingsScreen({ onGenerate }) {
         }));
     };
 
+    const handleRootChange = (field, value) => {
+        setSettings(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const handleGenerate = () => {
         onGenerate(settings);
     };
@@ -60,6 +68,25 @@ export function SettingsScreen({ onGenerate }) {
     return (
         <div className="screen active">
             <h1>Настройка примеров</h1>
+            <div className="operation-block active">
+                <div className="operation-header">
+                    <label htmlFor="gridMode">Режим печатной сетки</label>
+                </div>
+                <div className="operation-settings">
+                    <div className="setting-group">
+                        <label>Тип рендера:</label>
+                        <select
+                            id="gridMode"
+                            value={settings.gridMode}
+                            onChange={(e) => handleRootChange('gridMode', e.target.value)}
+                        >
+                            <option value="dom">DOM ячейки</option>
+                            <option value="css">CSS фон + цифры</option>
+                            <option value="svg">SVG лист</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             
             {/* Сложение */}
             <div className={`operation-block ${settings.addition.enabled ? 'active' : ''}`}>

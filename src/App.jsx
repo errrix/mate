@@ -10,9 +10,11 @@ import './App.css';
 function App() {
     const [currentScreen, setCurrentScreen] = useState('settings');
     const [examples, setExamples] = useState([]);
+    const [gridMode, setGridMode] = useState('dom');
 
     const handleGenerate = (settings) => {
         const generatedExamples = [];
+        setGridMode(settings.gridMode || 'dom');
 
         try {
             // Генерация примеров на сложение
@@ -79,7 +81,7 @@ function App() {
                 <SettingsScreen onGenerate={handleGenerate} />
             )}
             {currentScreen === 'examples' && (
-                <ExamplesScreen examples={examples} onBack={handleBack} />
+                <ExamplesScreen examples={examples} gridMode={gridMode} onBack={handleBack} />
             )}
         </div>
     );

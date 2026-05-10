@@ -1,22 +1,8 @@
-/* Стили для экрана с примерами - переопределяем базовые стили */
 .screen.active {
     position: relative !important;
     background-color: #fafafa !important;
     min-height: 100vh;
     padding: 30px !important;
-}
-
-.screen.active::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    transform: translate(-50%, -50%) rotate(45deg);
-    transform-origin: center center;
-    z-index: 0;
-    pointer-events: none;
 }
 
 .screen > * {
@@ -37,12 +23,9 @@
     margin-bottom: 30px;
 }
 
-.examples-section:last-child {
-    margin-bottom: 0;
-}
-
 .notebook-section {
     width: 100%;
+    margin-bottom: 28px;
 }
 
 .notebook-title {
@@ -54,34 +37,46 @@
     padding: 0;
 }
 
-.notebook-grid {
+.notebook-warning {
+    max-width: 190mm;
+    margin: 0 auto 10px auto;
+    padding: 10px 12px;
+    border: 1px solid #d88f2a;
+    background: #fff5e6;
+    color: #6f4100;
+    font-weight: 600;
+}
+
+.print-page {
+    --notebook-cell-size: 5mm;
+    --notebook-grid-line: #b8b8b8;
+    --notebook-text: #222;
+    width: 190mm;
+    height: 277mm;
+    margin: 0 auto;
+    background-color: #fff;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+}
+
+.notebook-grid,
+.notebook-overlay-grid {
+    width: 190mm;
+    height: 275mm;
+}
+
+.notebook-grid-dom {
     display: grid;
     gap: 0;
-    width: 100%;
-    border-right: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-/* Масштабируем сетку, если она не помещается */
-@media (max-width: 1200px) {
-    .notebook-grid {
-        transform: scale(0.9);
-        transform-origin: top center;
-    }
-}
-
-@media (max-width: 900px) {
-    .notebook-grid {
-        transform: scale(0.75);
-        transform-origin: top center;
-    }
+    border-right: 0.08mm solid var(--notebook-grid-line);
+    border-bottom: 0.08mm solid var(--notebook-grid-line);
 }
 
 .notebook-cell {
-    width: 30px;
-    height: 30px;
-    border-top: 1px solid #e0e0e0;
-    border-left: 1px solid #e0e0e0;
+    width: var(--notebook-cell-size);
+    height: var(--notebook-cell-size);
+    border-top: 0.08mm solid var(--notebook-grid-line);
+    border-left: 0.08mm solid var(--notebook-grid-line);
     border-right: none;
     border-bottom: none;
     box-sizing: border-box;
@@ -90,21 +85,98 @@
     justify-content: center;
 }
 
+.notebook-cell-operator,
+.notebook-cell-digit {
+    color: var(--notebook-text);
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
 .notebook-cell-operator {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #333;
+    font-size: 3.8mm;
 }
 
 .notebook-cell-digit {
-    font-size: 1.2em;
-    font-weight: 500;
-    color: #333;
+    font-size: 3.4mm;
 }
 
 .notebook-cell-line {
-    border-top: 2px solid #333;
-    border-bottom: 1px solid #e0e0e0;
+    border-top: 0.22mm solid #222;
+}
+
+.print-page-css {
+    background-image:
+        linear-gradient(var(--notebook-grid-line) 0.08mm, transparent 0.08mm),
+        linear-gradient(90deg, var(--notebook-grid-line) 0.08mm, transparent 0.08mm);
+    background-size: var(--notebook-cell-size) var(--notebook-cell-size);
+    background-position: 0 0;
+}
+
+.notebook-overlay-grid {
+    display: grid;
+}
+
+.notebook-overlay-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--notebook-text);
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+.notebook-overlay-operator {
+    font-size: 3.8mm;
+}
+
+.notebook-overlay-digit {
+    font-size: 3.4mm;
+}
+
+.notebook-overlay-line {
+    align-self: end;
+    height: 0;
+    border-top: 0.22mm solid #222;
+    margin-bottom: 0.7mm;
+}
+
+.print-page-svg {
+    display: flex;
+}
+
+.notebook-svg {
+    display: block;
+    width: 190mm;
+    height: 275mm;
+    background: #fff;
+}
+
+.notebook-svg-grid-line {
+    stroke: #b8b8b8;
+    stroke-width: 0.08;
+    shape-rendering: crispEdges;
+}
+
+.notebook-svg-answer-line {
+    stroke: #222;
+    stroke-width: 0.22;
+    shape-rendering: geometricPrecision;
+}
+
+.notebook-svg-digit,
+.notebook-svg-operator {
+    fill: #222;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    dominant-baseline: alphabetic;
+}
+
+.notebook-svg-digit {
+    font-size: 3.4px;
+}
+
+.notebook-svg-operator {
+    font-size: 3.8px;
 }
 
 .examples-container {
@@ -114,28 +186,40 @@
     margin-top: 0;
 }
 
+@media (max-width: 1000px) {
+    .print-page {
+        transform: scale(0.75);
+        transform-origin: top center;
+        margin-bottom: -70mm;
+    }
+}
+
+@media (max-width: 760px) {
+    .print-page {
+        transform: scale(0.55);
+        margin-bottom: -124mm;
+    }
+}
 
 @media print {
     @page {
-        margin: 0 !important;
-        size: auto;
-        padding: 0 !important;
+        margin: 10mm !important;
+        size: A4;
     }
 
-    html {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
+    html,
+    body,
     #root {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
+        background: #fff !important;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
 
     .button-group,
@@ -143,31 +227,44 @@
         display: none !important;
     }
 
+    .screen.active {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+        min-height: auto !important;
+    }
+
     .main-title {
-        margin: 0 0 20px 0 !important;
-        font-size: 2em !important;
+        display: none !important;
     }
 
     .notebook-title {
-        margin: 0 0 10px 0 !important;
+        display: none !important;
     }
 
-    /* Фон должен отображаться при печати */
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
+    .notebook-warning {
+        display: none !important;
     }
 
-
-    .screen {
-        display: block !important;
-        padding: 0 !important;
+    .notebook-section {
+        break-after: page;
+        page-break-after: always;
         margin: 0 !important;
-        width: 100% !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
+        width: 190mm !important;
+        height: 277mm !important;
+    }
+
+    .notebook-section:last-of-type {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    .print-page {
+        width: 190mm !important;
+        height: 277mm !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
     }
 
     .examples-container {
@@ -176,52 +273,6 @@
         margin: 0 !important;
         padding: 0 !important;
     }
-
-    .notebook-section {
-        margin: 0 !important;
-        width: 100% !important;
-    }
-
-    .notebook-grid {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        transform: none !important;
-        --cell-size: 6mm !important;
-        border-right: 0.08mm solid #b1b1b1 !important;
-        border-bottom: 0.08mm solid #b1b1b1 !important;
-    }
-
-
-    .notebook-section .notebook-grid .notebook-cell {
-        width: 6mm !important;
-        height: 6mm !important;
-        min-width: 6mm !important;
-        min-height: 6mm !important;
-        max-width: 6mm !important;
-        max-height: 6mm !important;
-        font-size: 3mm !important;
-        border-top: 0.08mm solid #b1b1b1 !important;
-        border-left: 0.08mm solid #b1b1b1 !important;
-        border-right: none !important;
-        border-bottom: none !important;
-    }
-
-    .notebook-section .notebook-grid .notebook-cell-operator {
-        font-size: 3.8mm !important;
-        font-weight: bold !important;
-    }
-
-    .notebook-section .notebook-grid .notebook-cell-digit {
-        font-size: 3.4mm !important;
-        font-weight: 500 !important;
-    }
-
-    .notebook-section .notebook-grid .notebook-cell-line {
-        border-top: 0.15mm solid #333 !important;
-        border-bottom: 0.08mm solid #b1b1b1 !important;
-    }
-
 }
 
 @media (max-width: 1200px) {
