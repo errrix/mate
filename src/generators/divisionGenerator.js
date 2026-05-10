@@ -1,47 +1,30 @@
-/**
- * Генератор примеров на деление
- */
+import { getDigitRange, getRandomInRange, getRandomNumberByDigits } from './numberUtils';
 
-/**
- * Генерирует случайное число заданной разрядности
- */
-function getRandomNumber(digits) {
-    const min = Math.pow(10, digits - 1);
-    const max = Math.pow(10, digits) - 1;
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+function generateDivisionExample(dividendDigits, divisorDigits) {
+    const dividendRange = getDigitRange(dividendDigits);
+    const divisor = getRandomNumberByDigits(divisorDigits);
+    const minQuotient = Math.ceil(dividendRange.min / divisor);
+    const maxQuotient = Math.floor(dividendRange.max / divisor);
+
+    if (maxQuotient < minQuotient) {
+        throw new RangeError('Невозможно сгенерировать деление с такими разрядностями.');
+    }
+
+    const quotient = getRandomInRange(minQuotient, maxQuotient);
+
+    return {
+        dividend: divisor * quotient,
+        divisor,
+        type: 'division'
+    };
 }
 
-/**
- * Генерирует примеры на деление
- * @param {number} count - количество примеров
- * @param {number} dividendDigits - разрядность делимого
- * @param {number} divisorDigits - разрядность делителя
- * @returns {Array} массив примеров
- */
 export function generateDivision(count, dividendDigits, divisorDigits) {
     const examples = [];
+
     for (let i = 0; i < count; i++) {
-        // Генерируем делитель
-        const divisor = getRandomNumber(divisorDigits);
-        
-        // Генерируем частное и вычисляем делимое для гарантии целого результата
-        const quotient = getRandomNumber(dividendDigits - divisorDigits + 1);
-        const dividend = divisor * quotient;
-        
-        // Проверяем разрядность делимого
-        const minDividend = Math.pow(10, dividendDigits - 1);
-        const maxDividend = Math.pow(10, dividendDigits) - 1;
-        
-        if (dividend >= minDividend && dividend <= maxDividend) {
-            examples.push({ 
-                dividend: dividend,
-                divisor: divisor,
-                type: 'division'
-            });
-        } else {
-            // Если не подходит, генерируем заново
-            i--;
-        }
+        examples.push(generateDivisionExample(dividendDigits, divisorDigits));
     }
+
     return examples;
 }

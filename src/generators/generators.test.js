@@ -81,4 +81,19 @@ describe('generateDivision', () => {
             expect(example.dividend % example.divisor).toBe(0);
         }
     });
+
+    test('supports same-digit dividend and divisor ranges without retry loops', () => {
+        const examples = generateDivision(20, 2, 2);
+
+        expect(examples).toHaveLength(20);
+        for (const example of examples) {
+            expectDigits(example.dividend, 2);
+            expectDigits(example.divisor, 2);
+            expect(example.dividend % example.divisor).toBe(0);
+        }
+    });
+
+    test('throws when divisor digits cannot fit into dividend digits', () => {
+        expect(() => generateDivision(1, 1, 3)).toThrow(RangeError);
+    });
 });
