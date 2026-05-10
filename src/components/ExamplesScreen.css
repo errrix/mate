@@ -153,10 +153,9 @@
 }
 
 .notebook-overlay-line {
-    align-self: end;
+    align-self: start;
     height: 0;
     border-top: 0.22mm solid #222;
-    margin-bottom: 0.7mm;
 }
 
 .print-page-svg {

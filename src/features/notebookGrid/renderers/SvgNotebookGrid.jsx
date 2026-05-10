@@ -8,7 +8,6 @@ export function SvgNotebookGrid({ placement }) {
     const { page, cells } = placement;
     const contentWidth = page.cols * page.cellSizeMm;
     const contentHeight = page.rows * page.cellSizeMm;
-    const lineOffset = page.cellSizeMm * 0.84;
 
     return (
         <div className="print-page print-page-svg">
@@ -46,9 +45,9 @@ export function SvgNotebookGrid({ placement }) {
                                 key={`line-${cell.row}-${cell.col}-${index}`}
                                 className="notebook-svg-answer-line"
                                 x1={cell.col * page.cellSizeMm}
-                                y1={cell.row * page.cellSizeMm + lineOffset}
+                                y1={cell.row * page.cellSizeMm}
                                 x2={(cell.col + 1) * page.cellSizeMm}
-                                y2={cell.row * page.cellSizeMm + lineOffset}
+                                y2={cell.row * page.cellSizeMm}
                             />
                         );
                     }
