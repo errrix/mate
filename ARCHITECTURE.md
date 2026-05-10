@@ -58,6 +58,7 @@ Division:
 
 `src/features/notebookGrid` owns the printable grid.
 
+- `README.md`: feature-specific print rules and renderer guidance.
 - `pageModel.js`: physical page/grid model. Current grid is full-page A4 with `5mm` cells, `42` columns and `59` rows.
 - `placement.js`: pure placement logic. It maps examples to grid cells with `{ row, col, kind, value }`.
 - `NotebookGrid.jsx`: feature entrypoint. It builds placement and chooses a renderer.

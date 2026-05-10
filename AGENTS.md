@@ -51,6 +51,7 @@ Addition and subtraction use `src/features/notebookGrid`.
 - `pageModel.js` defines the physical A4 grid model.
 - `placement.js` converts examples into `{ row, col, kind, value }` cells.
 - `NotebookGrid.jsx` chooses a renderer by mode.
+- `src/features/notebookGrid/README.md` documents print-specific constraints.
 - Render modes:
   - `dom`: DOM cells baseline.
   - `css`: explicit CSS line layer plus overlayed digits.
