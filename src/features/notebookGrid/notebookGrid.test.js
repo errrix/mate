@@ -3,15 +3,15 @@ import { createPageModel } from './pageModel';
 import { buildNotebookPlacement, parseVerticalNumbers } from './placement';
 
 describe('page model', () => {
-    test('creates an A4 print grid with 5mm cells and 10mm margins', () => {
+    test('creates a full-page A4 print grid with 5mm cells', () => {
         const page = createPageModel();
 
         expect(page.pageWidthMm).toBe(210);
         expect(page.pageHeightMm).toBe(297);
-        expect(page.marginMm).toBe(10);
+        expect(page.marginMm).toBe(0);
         expect(page.cellSizeMm).toBe(5);
-        expect(page.cols).toBe(38);
-        expect(page.rows).toBe(55);
+        expect(page.cols).toBe(42);
+        expect(page.rows).toBe(59);
     });
 });
 

@@ -38,7 +38,7 @@
 }
 
 .notebook-warning {
-    max-width: 190mm;
+    max-width: 210mm;
     margin: 0 auto 10px auto;
     padding: 10px 12px;
     border: 1px solid #d88f2a;
@@ -51,18 +51,19 @@
     --notebook-cell-size: 5mm;
     --notebook-grid-line: #b8b8b8;
     --notebook-text: #222;
-    width: 190mm;
-    height: 277mm;
+    width: 210mm;
+    height: 295mm;
     margin: 0 auto;
     background-color: #fff;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
     overflow: hidden;
+    position: relative;
 }
 
 .notebook-grid,
 .notebook-overlay-grid {
-    width: 190mm;
-    height: 275mm;
+    width: 210mm;
+    height: 295mm;
 }
 
 .notebook-grid-dom {
@@ -104,16 +105,34 @@
     border-top: 0.22mm solid #222;
 }
 
-.print-page-css {
-    background-image:
-        linear-gradient(var(--notebook-grid-line) 0.08mm, transparent 0.08mm),
-        linear-gradient(90deg, var(--notebook-grid-line) 0.08mm, transparent 0.08mm);
-    background-size: var(--notebook-cell-size) var(--notebook-cell-size);
-    background-position: 0 0;
+.notebook-css-lines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.notebook-css-line {
+    position: absolute;
+    display: block;
+    background: var(--notebook-grid-line);
+}
+
+.notebook-css-line-vertical {
+    top: 0;
+    width: 0.08mm;
+    height: 295mm;
+}
+
+.notebook-css-line-horizontal {
+    left: 0;
+    width: 210mm;
+    height: 0.08mm;
 }
 
 .notebook-overlay-grid {
     display: grid;
+    position: relative;
+    z-index: 1;
 }
 
 .notebook-overlay-item {
@@ -146,8 +165,8 @@
 
 .notebook-svg {
     display: block;
-    width: 190mm;
-    height: 275mm;
+    width: 210mm;
+    height: 295mm;
     background: #fff;
 }
 
@@ -203,7 +222,7 @@
 
 @media print {
     @page {
-        margin: 10mm !important;
+        margin: 0 !important;
         size: A4;
     }
 
@@ -250,8 +269,8 @@
         break-after: page;
         page-break-after: always;
         margin: 0 !important;
-        width: 190mm !important;
-        height: 277mm !important;
+        width: 210mm !important;
+        height: 295mm !important;
     }
 
     .notebook-section:last-of-type {
@@ -260,8 +279,8 @@
     }
 
     .print-page {
-        width: 190mm !important;
-        height: 277mm !important;
+        width: 210mm !important;
+        height: 295mm !important;
         margin: 0 !important;
         box-shadow: none !important;
         transform: none !important;

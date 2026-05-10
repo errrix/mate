@@ -1,7 +1,7 @@
 export const PRINT_PAGE = {
     pageWidthMm: 210,
     pageHeightMm: 297,
-    marginMm: 10,
+    marginMm: 0,
     cellSizeMm: 5
 };
 
