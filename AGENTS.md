@@ -11,6 +11,7 @@ This project is a Vite + React web app for generating printable math exercises i
 - Printable notebook grid feature: `src/features/notebookGrid`
 - Math generation logic: `src/generators/*Generator.js`
 - Shared generator utilities: `src/generators/numberUtils.js`
+- Operation-specific behavior notes: `docs/OPERATIONS.md`
 - Tests: `src/**/*.test.js`
 - Styles: plain CSS imports, not CSS Modules
 
@@ -46,7 +47,7 @@ npm.cmd run build
 
 ## Print Grid Notes
 
-Addition and subtraction use `src/features/notebookGrid`.
+Addition, subtraction, and multiplication use `src/features/notebookGrid`.
 
 - `pageModel.js` defines the physical A4 grid model.
 - `placement.js` converts examples into `{ row, col, kind, value }` cells.
@@ -59,9 +60,11 @@ Addition and subtraction use `src/features/notebookGrid`.
 
 All render modes must share the same placement output. Do not fix only one renderer unless the bug is renderer-specific.
 
+Decimal addition must align integer and fractional parts separately so commas stay in one column. Decimal comma rendering is intentionally handled as an overlay on the last integer digit cell.
+
 ## Current Priorities
 
 1. Refactor `SettingsScreen` into config-driven controls.
-2. Remove dead components if `AdditionExample` and `SubtractionExample` remain unused.
+2. Remove dead components if `AdditionExample`, `SubtractionExample`, and `MultiplicationExample` remain unused.
 3. Improve user-facing validation/errors for impossible settings.
 4. Keep print grid changes isolated and test placement logic directly.

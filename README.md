@@ -22,6 +22,13 @@ npm run dev
 npm run build
 ```
 
+## Документация
+
+- `ARCHITECTURE.md` — архитектура приложения и поток данных.
+- `docs/OPERATIONS.md` — поведение операций, настройки и ограничения генераторов.
+- `src/features/notebookGrid/README.md` — печатная сетка A4 и режимы рендера.
+- `AGENTS.md` — краткие инструкции для coding agents.
+
 ## Структура проекта
 
 ```
@@ -38,6 +45,8 @@ src/
 │   ├── SubtractionExample.jsx
 │   ├── MultiplicationExample.jsx
 │   └── DivisionExample.jsx
+├── features/
+│   └── notebookGrid/   # Печатная тетрадная сетка
 ├── App.jsx             # Главный компонент
 └── main.jsx            # Точка входа
 ```
@@ -46,4 +55,4 @@ src/
 
 - React 18
 - Vite
-- CSS Modules
+- Plain CSS imports

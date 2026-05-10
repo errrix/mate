@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The app generates math exercises for students and formats addition/subtraction examples on printable notebook-style A4 grids. The user chooses operations, numeric ranges, and the print-grid render mode.
+The app generates math exercises for students and formats printable examples on notebook-style A4 grids. The user chooses operations, numeric ranges, and the print-grid render mode.
 
 ## Runtime Stack
 
@@ -18,8 +18,8 @@ The app generates math exercises for students and formats addition/subtraction e
 2. `SettingsScreen` passes settings to `App` on generate.
 3. `App` stores `gridMode`, calls enabled generators, stores generated examples, and switches to the examples screen.
 4. `ExamplesScreen` groups examples by `type`.
-5. Addition/subtraction groups render through `NotebookGrid`.
-6. Multiplication/division groups render through their existing operation-specific components.
+5. Addition/subtraction/multiplication groups render through `NotebookGrid`.
+6. Division groups render through the existing operation-specific component.
 7. Printing is triggered with `window.print()`.
 
 ## Example Shapes
@@ -29,6 +29,16 @@ Addition and subtraction:
 ```js
 {
   numbers: [12, 34],
+  operator: "+",
+  type: "addition"
+}
+```
+
+Decimal addition values are stored as strings because they need display-specific formatting:
+
+```js
+{
+  numbers: ["12,37", "4,5"],
   operator: "+",
   type: "addition"
 }
@@ -68,14 +78,57 @@ Division:
 
 Renderer implementations should not decide where digits go. Placement must stay renderer-independent.
 
+The grid currently supports addition, subtraction, and multiplication. Division has a separate visual component and is not part of the shared grid yet.
+
+### Placement Details
+
+`placement.js` converts every printable character into a token-like cell description before renderers see it.
+
+Whole numbers are right-aligned by digit count.
+
+Decimal numbers are split into:
+
+- integer tokens,
+- fractional tokens,
+- a `decimalSeparatorAfter` marker on the last integer token.
+
+This matters because the decimal comma must line up vertically across the numbers in one example. The comma is rendered as an overlay on the final integer digit cell, not as its own grid column. Fractional digits begin in the next grid column.
+
+Trailing zeroes in the fractional part are removed for display. After trimming, placement still pads the fractional side so examples keep consistent decimal alignment.
+
+The answer line spans `parsed.maxLength` cells. For decimal examples this includes integer and fractional digit columns, but not a separate comma column.
+
+### Renderers
+
+All three renderers consume the same `cells` array:
+
+- DOM renders all physical cells and places content inside matching cells.
+- CSS draws explicit line layers and overlays items with CSS Grid.
+- SVG draws the full grid and places text with SVG coordinates.
+
+Decimal comma styling has renderer-specific mechanics, but renderer-specific code must only interpret the shared `decimalSeparatorAfter` flag. It must not re-compute number alignment.
+
 ## Generator Architecture
 
 Generators live in `src/generators`.
 
 - `numberUtils.js` owns digit ranges and random integer helpers.
 - Addition/subtraction/multiplication/division generators all use shared helpers.
+- Addition can generate decimal strings through the shared decimal helper.
 - Multiplication throws `RangeError` when `maxResult` is impossible.
 - Division computes a valid quotient range for the selected divisor and does not use retry loops.
+
+Operation-specific behavior is documented in `docs/OPERATIONS.md`.
+
+## Settings Architecture
+
+`SettingsScreen` currently owns one local `settings` object. It contains root settings such as `gridMode` and nested settings for each operation.
+
+The form is still hand-written. When adding controls, keep the current state shape explicit and avoid introducing a second source of truth.
+
+Subtraction uses disabled select options to prevent impossible digit ranges. The UI should make invalid combinations unavailable instead of showing an error for this case.
+
+The settings screen is a good candidate for a config-driven refactor, but that should be done separately from operation behavior changes.
 
 ## Tests
 
@@ -92,5 +145,13 @@ npm.cmd run build
 
 - `SettingsScreen` is still a large hand-written form and should be made config-driven.
 - `AdditionExample` and `SubtractionExample` appear obsolete after the notebook grid refactor; confirm before deleting.
+- `MultiplicationExample` may also become obsolete now that multiplication uses `NotebookGrid`; confirm before deleting.
 - Print output depends on browser print behavior and printer settings, so visual checks remain necessary for grid changes.
 - User-facing validation still relies partly on `alert()` and should be improved later.
+
+## Documentation Map
+
+- `AGENTS.md`: concise working instructions for coding agents.
+- `ARCHITECTURE.md`: system-level architecture and current risks.
+- `docs/OPERATIONS.md`: operation-specific settings, generator rules, and grid expectations.
+- `src/features/notebookGrid/README.md`: detailed print-grid and renderer constraints.
