@@ -63,6 +63,10 @@ describe('generateMultiplication', () => {
             expect(example.numbers[0] * example.numbers[1]).toBeLessThanOrEqual(500);
         }
     });
+
+    test('throws when maxResult cannot be reached with the selected ranges', () => {
+        expect(() => generateMultiplication(1, 3, 3, 100)).toThrow(RangeError);
+    });
 });
 
 describe('generateDivision', () => {

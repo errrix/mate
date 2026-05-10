@@ -14,45 +14,50 @@ function App() {
     const handleGenerate = (settings) => {
         const generatedExamples = [];
 
-        // Генерация примеров на сложение
-        if (settings.addition.enabled) {
-            const additionExamples = generateAddition(
-                settings.addition.count,
-                settings.addition.digits,
-                settings.addition.terms
-            );
-            generatedExamples.push(...additionExamples);
-        }
+        try {
+            // Генерация примеров на сложение
+            if (settings.addition.enabled) {
+                const additionExamples = generateAddition(
+                    settings.addition.count,
+                    settings.addition.digits,
+                    settings.addition.terms
+                );
+                generatedExamples.push(...additionExamples);
+            }
 
-        // Генерация примеров на вычитание
-        if (settings.subtraction.enabled) {
-            const subtractionExamples = generateSubtraction(
-                settings.subtraction.count,
-                settings.subtraction.minuendDigits,
-                settings.subtraction.subtrahendDigits
-            );
-            generatedExamples.push(...subtractionExamples);
-        }
+            // Генерация примеров на вычитание
+            if (settings.subtraction.enabled) {
+                const subtractionExamples = generateSubtraction(
+                    settings.subtraction.count,
+                    settings.subtraction.minuendDigits,
+                    settings.subtraction.subtrahendDigits
+                );
+                generatedExamples.push(...subtractionExamples);
+            }
 
-        // Генерация примеров на умножение
-        if (settings.multiplication.enabled) {
-            const multiplicationExamples = generateMultiplication(
-                settings.multiplication.count,
-                settings.multiplication.firstDigits,
-                settings.multiplication.secondDigits,
-                settings.multiplication.maxResult
-            );
-            generatedExamples.push(...multiplicationExamples);
-        }
+            // Генерация примеров на умножение
+            if (settings.multiplication.enabled) {
+                const multiplicationExamples = generateMultiplication(
+                    settings.multiplication.count,
+                    settings.multiplication.firstDigits,
+                    settings.multiplication.secondDigits,
+                    settings.multiplication.maxResult
+                );
+                generatedExamples.push(...multiplicationExamples);
+            }
 
-        // Генерация примеров на деление
-        if (settings.division.enabled) {
-            const divisionExamples = generateDivision(
-                settings.division.count,
-                settings.division.dividendDigits,
-                settings.division.divisorDigits
-            );
-            generatedExamples.push(...divisionExamples);
+            // Генерация примеров на деление
+            if (settings.division.enabled) {
+                const divisionExamples = generateDivision(
+                    settings.division.count,
+                    settings.division.dividendDigits,
+                    settings.division.divisorDigits
+                );
+                generatedExamples.push(...divisionExamples);
+            }
+        } catch (error) {
+            alert(error.message);
+            return;
         }
 
         if (generatedExamples.length === 0) {
