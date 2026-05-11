@@ -48,11 +48,11 @@
 }
 
 .print-page {
-    --notebook-cell-size: 5mm;
+    --notebook-cell-size: 7mm;
     --notebook-grid-line: #b8b8b8;
     --notebook-text: #222;
     width: 210mm;
-    height: 295mm;
+    height: 294mm;
     margin: 0 auto;
     background-color: #fff;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
@@ -60,51 +60,9 @@
     position: relative;
 }
 
-.notebook-grid,
 .notebook-overlay-grid {
     width: 210mm;
-    height: 295mm;
-}
-
-.notebook-grid-dom {
-    display: grid;
-    gap: 0;
-    border-right: 0.08mm solid var(--notebook-grid-line);
-    border-bottom: 0.08mm solid var(--notebook-grid-line);
-}
-
-.notebook-cell {
-    width: var(--notebook-cell-size);
-    height: var(--notebook-cell-size);
-    border-top: 0.08mm solid var(--notebook-grid-line);
-    border-left: 0.08mm solid var(--notebook-grid-line);
-    border-right: none;
-    border-bottom: none;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: visible;
-}
-
-.notebook-cell-operator,
-.notebook-cell-digit {
-    color: var(--notebook-text);
-    font-family: 'Courier New', monospace;
-    font-weight: 600;
-}
-
-.notebook-cell-operator {
-    font-size: 3.8mm;
-}
-
-.notebook-cell-digit {
-    font-size: 3.4mm;
-}
-
-.notebook-cell-line {
-    border-top: 0.22mm solid #222;
+    height: 294mm;
 }
 
 .notebook-css-lines {
@@ -122,7 +80,7 @@
 .notebook-css-line-vertical {
     top: 0;
     width: 0.08mm;
-    height: 295mm;
+    height: 294mm;
 }
 
 .notebook-css-line-horizontal {
@@ -149,18 +107,18 @@
 }
 
 .notebook-overlay-operator {
-    font-size: 3.8mm;
+    font-size: calc(var(--notebook-cell-size) * 0.76);
 }
 
 .notebook-overlay-digit {
-    font-size: 3.4mm;
+    font-size: calc(var(--notebook-cell-size) * 0.68);
 }
 
 .notebook-decimal-separator {
     position: absolute;
-    left: 15px;
-    top: 11px;
-    font-size: 2.8mm;
+    left: calc(var(--notebook-cell-size) * 0.79);
+    top: calc(var(--notebook-cell-size) * 0.58);
+    font-size: calc(var(--notebook-cell-size) * 0.56);
     line-height: 1;
 }
 
@@ -168,53 +126,6 @@
     align-self: start;
     height: 0;
     border-top: 0.22mm solid #222;
-}
-
-.print-page-svg {
-    display: flex;
-}
-
-.notebook-svg {
-    display: block;
-    width: 210mm;
-    height: 295mm;
-    background: #fff;
-}
-
-.notebook-svg-grid-line {
-    stroke: #b8b8b8;
-    stroke-width: 0.08;
-    shape-rendering: crispEdges;
-}
-
-.notebook-svg-answer-line {
-    stroke: #222;
-    stroke-width: 0.22;
-    shape-rendering: geometricPrecision;
-}
-
-.notebook-svg-digit,
-.notebook-svg-operator {
-    fill: #222;
-    font-family: 'Courier New', monospace;
-    font-weight: 600;
-    dominant-baseline: alphabetic;
-}
-
-.notebook-svg-digit {
-    font-size: 3.4px;
-}
-
-.notebook-svg-operator {
-    font-size: 3.8px;
-}
-
-.notebook-svg-decimal-separator {
-    fill: #222;
-    font-family: 'Courier New', monospace;
-    font-size: 2.8px;
-    font-weight: 600;
-    dominant-baseline: alphabetic;
 }
 
 .examples-container {
@@ -289,7 +200,7 @@
         page-break-after: always;
         margin: 0 !important;
         width: 210mm !important;
-        height: 295mm !important;
+        height: 294mm !important;
     }
 
     .notebook-section:last-of-type {
@@ -299,7 +210,7 @@
 
     .print-page {
         width: 210mm !important;
-        height: 295mm !important;
+        height: 294mm !important;
         margin: 0 !important;
         box-shadow: none !important;
         transform: none !important;

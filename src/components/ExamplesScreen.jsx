@@ -22,7 +22,7 @@ function groupExamples(examples) {
     }, {});
 }
 
-export function ExamplesScreen({ examples, gridMode = 'dom', onBack }) {
+export function ExamplesScreen({ examples, onBack }) {
     const groupedExamples = groupExamples(examples);
 
     return (
@@ -36,7 +36,6 @@ export function ExamplesScreen({ examples, gridMode = 'dom', onBack }) {
                             title="Сложение"
                             items={items}
                             operator="+"
-                            mode={gridMode}
                         />
                     );
                 }
@@ -48,7 +47,6 @@ export function ExamplesScreen({ examples, gridMode = 'dom', onBack }) {
                             title="Вычитание"
                             items={items}
                             operator="−"
-                            mode={gridMode}
                         />
                     );
                 }
@@ -60,7 +58,6 @@ export function ExamplesScreen({ examples, gridMode = 'dom', onBack }) {
                             title="Умножение"
                             items={items}
                             operator="×"
-                            mode={gridMode}
                         />
                     );
                 }

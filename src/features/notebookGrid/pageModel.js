@@ -2,7 +2,7 @@ export const PRINT_PAGE = {
     pageWidthMm: 210,
     pageHeightMm: 297,
     marginMm: 0,
-    cellSizeMm: 5
+    cellSizeMm: 7
 };
 
 export function createPageModel(config = PRINT_PAGE) {
