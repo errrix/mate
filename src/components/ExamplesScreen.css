@@ -23,6 +23,21 @@
     margin-bottom: 30px;
 }
 
+.result-empty {
+    text-align: center;
+}
+
+.result-empty p {
+    margin-bottom: 24px;
+    color: #5f6876;
+    font-size: 1.1rem;
+}
+
+.result-empty-link {
+    display: inline-flex;
+    text-decoration: none;
+}
+
 .notebook-section {
     width: 100%;
     margin-bottom: 28px;

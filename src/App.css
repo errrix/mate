@@ -1,10 +1,18 @@
 .container {
+    width: 100%;
     max-width: 1000px;
     margin: 0 auto;
     background: white;
     border-radius: 15px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     overflow: hidden;
+}
+
+.container-page {
+    max-width: none;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 @media print {

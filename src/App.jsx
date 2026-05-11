@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { HomePage } from './components/HomePage';
 import { SettingsScreen } from './components/SettingsScreen';
 import { ExamplesScreen } from './components/ExamplesScreen';
+import { InfoPage } from './components/InfoPage';
 import { generateAddition } from './generators/additionGenerator';
 import { generateSubtraction } from './generators/subtractionGenerator';
 import { generateMultiplication } from './generators/multiplicationGenerator';
@@ -8,8 +11,12 @@ import { generateDivision } from './generators/divisionGenerator';
 import './App.css';
 
 function App() {
-    const [currentScreen, setCurrentScreen] = useState('settings');
     const [examples, setExamples] = useState([]);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const containerClassName = location.pathname === '/' || location.pathname === '/faq' || location.pathname === '/how-it-works'
+        ? 'container container-page'
+        : 'container';
 
     const handleGenerate = (settings) => {
         const generatedExamples = [];
@@ -67,21 +74,26 @@ function App() {
         }
 
         setExamples(generatedExamples);
-        setCurrentScreen('examples');
+        navigate('/result-list');
     };
 
     const handleBack = () => {
-        setCurrentScreen('settings');
+        navigate('/generator');
     };
 
     return (
-        <div className="container">
-            {currentScreen === 'settings' && (
-                <SettingsScreen onGenerate={handleGenerate} />
-            )}
-            {currentScreen === 'examples' && (
-                <ExamplesScreen examples={examples} onBack={handleBack} />
-            )}
+        <div className={containerClassName}>
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/generator" element={<SettingsScreen onGenerate={handleGenerate} />} />
+                <Route
+                    path="/result-list"
+                    element={<ExamplesScreen examples={examples} onBack={handleBack} />}
+                />
+                <Route path="/faq" element={<InfoPage type="faq" />} />
+                <Route path="/how-it-works" element={<InfoPage type="how-it-works" />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
         </div>
     );
 }

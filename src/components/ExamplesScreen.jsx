@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { DivisionExample } from './DivisionExample';
 import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
 import './ExamplesScreen.css';
@@ -24,6 +25,18 @@ function groupExamples(examples) {
 
 export function ExamplesScreen({ examples, onBack }) {
     const groupedExamples = groupExamples(examples);
+
+    if (examples.length === 0) {
+        return (
+            <div className="screen active result-empty">
+                <h1 className="main-title">Лист ещё не создан</h1>
+                <p>Сначала настройте и сгенерируйте задания.</p>
+                <Link className="btn-primary result-empty-link" to="/generator">
+                    Открыть генератор
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="screen active">
