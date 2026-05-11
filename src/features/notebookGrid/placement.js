@@ -1,10 +1,11 @@
 import { DEFAULT_PAGE_MODEL } from './pageModel';
 
 export const DEFAULT_NOTEBOOK_LAYOUT = {
-    examplesPerRow: 5,
     gapRows: 3,
     topPaddingRows: 1,
-    minColsPerExample: 6
+    minColsPerExample: 6,
+    minGapColsBetweenExamples: 2,
+    sidePaddingCols: 2
 };
 
 function parsePrintableNumberParts(number) {
@@ -77,6 +78,89 @@ export function parseVerticalNumbers(example) {
     };
 }
 
+function buildExampleRows(parsedExamples, page, layout) {
+    const rows = [];
+    let currentRow = [];
+    let currentMinWidth = 0;
+    const usableCols = page.cols - layout.sidePaddingCols * 2;
+
+    parsedExamples.forEach((parsedExample) => {
+        const slotWidth = Math.max(layout.minColsPerExample, parsedExample.parsed.width);
+        const nextMinWidth = currentRow.length === 0
+            ? slotWidth
+            : currentMinWidth + layout.minGapColsBetweenExamples + slotWidth;
+
+        if (currentRow.length > 0 && nextMinWidth > usableCols) {
+            rows.push({
+                examples: currentRow,
+                width: currentMinWidth,
+                height: Math.max(...currentRow.map(({ parsed }) => parsed.height))
+            });
+            currentRow = [];
+            currentMinWidth = 0;
+        }
+
+        currentRow.push({
+            ...parsedExample,
+            slotWidth
+        });
+        currentMinWidth = currentRow.length === 1
+            ? slotWidth
+            : currentMinWidth + layout.minGapColsBetweenExamples + slotWidth;
+    });
+
+    if (currentRow.length > 0) {
+        rows.push({
+            examples: currentRow,
+            width: currentMinWidth,
+            height: Math.max(...currentRow.map(({ parsed }) => parsed.height))
+        });
+    }
+
+    return rows;
+}
+
+function getLeftAlignedRowStartCols(row, layout) {
+    let nextStartCol = layout.sidePaddingCols;
+
+    return row.examples.map((example, index) => {
+        const startCol = nextStartCol;
+        const gapWidth = index < row.examples.length - 1
+            ? layout.minGapColsBetweenExamples
+            : 0;
+        nextStartCol += example.slotWidth + gapWidth;
+        return startCol;
+    });
+}
+
+function getDistributedRowStartCols(row, page, layout) {
+    if (row.examples.length === 1) {
+        return [Math.max(
+            layout.sidePaddingCols,
+            Math.floor((page.cols - row.examples[0].slotWidth) / 2)
+        )];
+    }
+
+    const totalSlotWidth = row.examples.reduce((total, example) => total + example.slotWidth, 0);
+    const gapCount = row.examples.length - 1;
+    const availableGapWidth = page.cols - layout.sidePaddingCols * 2 - totalSlotWidth;
+    const baseGapWidth = Math.max(
+        layout.minGapColsBetweenExamples,
+        Math.floor(availableGapWidth / gapCount)
+    );
+    let extraGapCols = availableGapWidth - baseGapWidth * gapCount;
+    let nextStartCol = layout.sidePaddingCols;
+
+    return row.examples.map((example, index) => {
+        const startCol = nextStartCol;
+        const gapWidth = index < gapCount
+            ? baseGapWidth + (extraGapCols-- > 0 ? 1 : 0)
+            : 0;
+        nextStartCol += example.slotWidth + gapWidth;
+        return startCol;
+    });
+}
+
 export function buildNotebookPlacement(items, operator, options = {}) {
     const page = options.page ?? DEFAULT_PAGE_MODEL;
     const layout = { ...DEFAULT_NOTEBOOK_LAYOUT, ...options.layout };
@@ -102,67 +186,71 @@ export function buildNotebookPlacement(items, operator, options = {}) {
         parsed: parseVerticalNumbers(example)
     }));
 
-    const maxExampleHeight = Math.max(...parsedExamples.map(({ parsed }) => parsed.height));
-    const maxExampleWidth = Math.max(...parsedExamples.map(({ parsed }) => parsed.width));
-    const colsPerExample = Math.max(
-        layout.minColsPerExample,
-        Math.floor(page.cols / layout.examplesPerRow)
-    );
-    const examplesPerColumn = Math.ceil(parsedExamples.length / layout.examplesPerRow);
+    const rows = buildExampleRows(parsedExamples, page, layout);
     const requiredRows = layout.topPaddingRows
-        + examplesPerColumn * maxExampleHeight
-        + Math.max(0, examplesPerColumn - 1) * layout.gapRows;
+        + rows.reduce((total, row) => total + row.height, 0)
+        + Math.max(0, rows.length - 1) * layout.gapRows;
     const cells = [];
+    let currentRowStart = layout.topPaddingRows;
 
-    parsedExamples.forEach(({ parsed }, exampleIndex) => {
-        const groupCol = exampleIndex % layout.examplesPerRow;
-        const groupRow = Math.floor(exampleIndex / layout.examplesPerRow);
-        const startCol = groupCol * colsPerExample
-            + Math.floor((colsPerExample - maxExampleWidth) / 2);
-        const startRow = layout.topPaddingRows
-            + groupRow * (maxExampleHeight + layout.gapRows);
+    rows.forEach((row, rowIndex) => {
+        const isLastRow = rowIndex === rows.length - 1;
+        const rowStartCols = isLastRow
+            ? getLeftAlignedRowStartCols(row, layout)
+            : getDistributedRowStartCols(row, page, layout);
 
-        parsed.alignedDigits.forEach((digits, rowIndex) => {
-            if (rowIndex > 0) {
-                cells.push({
-                    row: startRow + rowIndex,
-                    col: startCol,
-                    kind: 'operator',
-                    value: operator
-                });
-            }
+        row.examples.forEach(({ parsed, slotWidth }, exampleIndex) => {
+            const slotStartCol = rowStartCols[exampleIndex];
+            const startCol = slotStartCol + Math.max(0, Math.floor((slotWidth - parsed.width) / 2));
+            const startRow = currentRowStart;
 
-            digits.forEach((digit, digitIndex) => {
-                if (digit === null) {
-                    return;
+            parsed.alignedDigits.forEach((digits, rowIndex) => {
+                if (rowIndex > 0) {
+                    cells.push({
+                        row: startRow + rowIndex,
+                        col: startCol,
+                        kind: 'operator',
+                        value: operator
+                    });
                 }
 
-                cells.push({
-                    row: startRow + rowIndex,
-                    col: startCol + 1 + digitIndex,
-                    kind: 'digit',
-                    value: digit.value,
-                    decimalSeparatorAfter: digit.decimalSeparatorAfter === true
+                digits.forEach((digit, digitIndex) => {
+                    if (digit === null) {
+                        return;
+                    }
+
+                    cells.push({
+                        row: startRow + rowIndex,
+                        col: startCol + 1 + digitIndex,
+                        kind: 'digit',
+                        value: digit.value,
+                        decimalSeparatorAfter: digit.decimalSeparatorAfter === true
+                    });
                 });
             });
+
+            for (let digitIndex = 0; digitIndex < parsed.maxLength; digitIndex++) {
+                cells.push({
+                    row: startRow + parsed.numbersCount,
+                    col: startCol + 1 + digitIndex,
+                    kind: 'line',
+                    value: ''
+                });
+            }
         });
 
-        for (let digitIndex = 0; digitIndex < parsed.maxLength; digitIndex++) {
-            cells.push({
-                row: startRow + parsed.numbersCount,
-                col: startCol + 1 + digitIndex,
-                kind: 'line',
-                value: ''
-            });
-        }
+        currentRowStart += row.height + layout.gapRows;
     });
+    const requiredCols = cells.length > 0
+        ? Math.max(...cells.map((cell) => cell.col)) + 1
+        : page.cols;
 
     return {
         page,
         layout,
         cells,
-        overflow: requiredRows > page.rows,
+        overflow: requiredRows > page.rows || requiredCols > page.cols,
         requiredRows,
-        requiredCols: page.cols
+        requiredCols
     };
 }

@@ -90,6 +90,36 @@ describe('notebook placement', () => {
         expect(decimalCells.map((cell) => cell.value)).toEqual(['6', '7']);
     });
 
+    test('wraps wide decimal examples and distributes horizontal gaps', () => {
+        const examples = Array.from({ length: 5 }, (_, index) => ({
+            example: { numbers: ['1234,56', '2345,67', '3456,78'], type: 'addition' },
+            index
+        }));
+        const placement = buildNotebookPlacement(examples, '+');
+        const firstRowOperatorCols = placement.cells
+            .filter((cell) => cell.kind === 'operator' && cell.row === 2)
+            .map((cell) => cell.col);
+        const lastRowOperatorCols = placement.cells
+            .filter((cell) => cell.kind === 'operator' && cell.row === 9)
+            .map((cell) => cell.col);
+        const lineRows = placement.cells
+            .filter((cell) => cell.kind === 'line')
+            .reduce((acc, cell) => ({
+                ...acc,
+                [cell.row]: (acc[cell.row] ?? 0) + 1
+            }), {});
+
+        expect(Math.max(...placement.cells.map((cell) => cell.col))).toBeLessThan(placement.page.cols);
+        expect(firstRowOperatorCols).toEqual([2, 12, 21]);
+        expect(lastRowOperatorCols).toEqual([2, 11]);
+        expect(lineRows).toMatchObject({
+            4: 18,
+            11: 12
+        });
+        expect(placement.requiredCols).toBe(28);
+        expect(placement.overflow).toBe(false);
+    });
+
     test('reports overflow instead of scaling when content exceeds one page', () => {
         const examples = Array.from({ length: 80 }, (_, index) => ({
             example: { numbers: [123, 45], type: 'addition' },

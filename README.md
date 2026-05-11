@@ -26,7 +26,7 @@ npm run build
 
 - `ARCHITECTURE.md` — архитектура приложения и поток данных.
 - `docs/OPERATIONS.md` — поведение операций, настройки и ограничения генераторов.
-- `src/features/notebookGrid/README.md` — печатная сетка A4 и режимы рендера.
+- `src/features/notebookGrid/README.md` — печатная сетка A4 и CSS-рендерер.
 - `AGENTS.md` — краткие инструкции для coding agents.
 
 ## Структура проекта
@@ -53,6 +53,7 @@ src/
 
 ## Технологии
 
-- React 18
-- Vite
+- React 19
+- React Router
+- Vite 8
 - Plain CSS imports

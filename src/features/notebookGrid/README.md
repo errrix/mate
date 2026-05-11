@@ -24,6 +24,8 @@ The CSS print rule uses `@page { margin: 0; size: A4; }`. Printer hardware may s
 
 `placement.js` owns all example positioning.
 
+Examples are packed left to right by their actual cell width inside a content area with `2` empty cells of padding on the left and right page edges. Neighboring examples keep at least `2` empty cells between them. If the next example would exceed the content area with that minimum gap, placement moves it to the next row band and keeps the digits aligned inside that new band. Remaining horizontal space is distributed across gaps in non-final rows so they do not leave a large unused area on the right. The final row is left-aligned with the minimum gap instead of being centered or stretched.
+
 Input:
 
 ```js

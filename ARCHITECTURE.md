@@ -2,25 +2,48 @@
 
 ## Purpose
 
-The app generates math exercises for students and formats printable examples on notebook-style A4 grids. The user chooses operations, numeric ranges, and the print-grid render mode.
+The app generates math exercises for students and formats printable examples on notebook-style A4 grids. The user chooses operations, numeric ranges, and operation-specific options.
 
 ## Runtime Stack
 
-- React 18
-- Vite 5
+- React 19
+- Vite 8
+- React Router
 - Vitest
 - Plain CSS imported from components
-- No router, backend, state library, or TypeScript
+- No backend, state library, or TypeScript
 
 ## Data Flow
 
-1. `SettingsScreen` owns the local `settings` object, including operation options and `gridMode`.
+1. `ExerciseStoreProvider` owns shared `settings`.
 2. `SettingsScreen` passes settings to `App` on generate.
-3. `App` stores `gridMode`, calls enabled generators, stores generated examples, and switches to the examples screen.
-4. `ExamplesScreen` groups examples by `type`.
+3. `App` verifies that at least one operation is enabled and navigates to `/result-list`.
+4. `ExamplesScreen` reads settings from the shared store, generates examples for the current settings, and groups them by `type`.
 5. Addition/subtraction/multiplication groups render through `NotebookGrid`.
 6. Division groups render through the existing operation-specific component.
 7. Printing is triggered with `window.print()`.
+
+## Client Store
+
+`src/store/exerciseStore.jsx` provides the app-level store through React context.
+
+- `settings`: operation settings used by the generator form.
+- `setSettings`: updates form input state.
+
+Settings are persisted in `localStorage` under `math-examples-generator.settings`. Saved settings are merged with defaults on load so newly added fields can fall back to default values.
+
+Generated examples are not stored in `localStorage`. `/result-list` generates the current sheet from the persisted settings, so direct result-page loads work without storing derived example data.
+
+## Routing
+
+The app uses `react-router-dom` with browser routing.
+
+- `/`: marketing-style home page.
+- `/generator`: settings form.
+- `/result-list`: generated printable examples.
+- `/faq`: FAQ content through `InfoPage`.
+- `/how-it-works`: usage explanation through `InfoPage`.
+- Unknown paths redirect to `/`.
 
 ## Example Shapes
 
@@ -69,12 +92,10 @@ Division:
 `src/features/notebookGrid` owns the printable grid.
 
 - `README.md`: feature-specific print rules and renderer guidance.
-- `pageModel.js`: physical page/grid model. Current grid is full-page A4 with `5mm` cells, `42` columns and `59` rows.
+- `pageModel.js`: physical page/grid model. Current grid is full-page A4 with `7mm` cells, `30` columns and `42` rows.
 - `placement.js`: pure placement logic. It maps examples to grid cells with `{ row, col, kind, value }`.
-- `NotebookGrid.jsx`: feature entrypoint. It builds placement and chooses a renderer.
-- `renderers/DomNotebookGrid.jsx`: baseline renderer with real DOM cells.
+- `NotebookGrid.jsx`: feature entrypoint. It builds placement and renders the CSS grid.
 - `renderers/CssNotebookGrid.jsx`: explicit CSS line layer plus CSS Grid digit overlay.
-- `renderers/SvgNotebookGrid.jsx`: SVG grid lines and text.
 
 Renderer implementations should not decide where digits go. Placement must stay renderer-independent.
 
@@ -98,15 +119,16 @@ Trailing zeroes in the fractional part are removed for display. After trimming, 
 
 The answer line spans `parsed.maxLength` cells. For decimal examples this includes integer and fractional digit columns, but not a separate comma column.
 
-### Renderers
+Examples are packed into row bands by actual cell width. Placement reserves `2` empty cells on the left and right page edges, keeps at least `2` empty cells between neighboring examples, distributes extra horizontal space across non-final row gaps, and left-aligns the final row with the minimum gap.
 
-All three renderers consume the same `cells` array:
+### Renderer
 
-- DOM renders all physical cells and places content inside matching cells.
-- CSS draws explicit line layers and overlays items with CSS Grid.
-- SVG draws the full grid and places text with SVG coordinates.
+The CSS renderer consumes the shared `cells` array from placement.
 
-Decimal comma styling has renderer-specific mechanics, but renderer-specific code must only interpret the shared `decimalSeparatorAfter` flag. It must not re-compute number alignment.
+- It draws explicit line layers instead of relying on CSS backgrounds, because browser print preview can omit backgrounds unless background graphics are enabled.
+- It overlays digits, operators, and answer-line segments with CSS Grid.
+
+Decimal comma styling is handled by interpreting the shared `decimalSeparatorAfter` flag. The renderer must not re-compute number alignment.
 
 ## Generator Architecture
 
@@ -122,7 +144,7 @@ Operation-specific behavior is documented in `docs/OPERATIONS.md`.
 
 ## Settings Architecture
 
-`SettingsScreen` currently owns one local `settings` object. It contains root settings such as `gridMode` and nested settings for each operation.
+`SettingsScreen` reads and writes the shared `settings` object from `ExerciseStoreProvider`. The object contains nested settings for each operation.
 
 The form is still hand-written. When adding controls, keep the current state shape explicit and avoid introducing a second source of truth.
 
@@ -144,8 +166,7 @@ npm.cmd run build
 ## Current Risks
 
 - `SettingsScreen` is still a large hand-written form and should be made config-driven.
-- `AdditionExample` and `SubtractionExample` appear obsolete after the notebook grid refactor; confirm before deleting.
-- `MultiplicationExample` may also become obsolete now that multiplication uses `NotebookGrid`; confirm before deleting.
+- `AdditionExample`, `SubtractionExample`, and `MultiplicationExample` are currently unused after the notebook grid refactor; confirm before deleting.
 - Print output depends on browser print behavior and printer settings, so visual checks remain necessary for grid changes.
 - User-facing validation still relies partly on `alert()` and should be improved later.
 

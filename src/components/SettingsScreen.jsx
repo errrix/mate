@@ -1,38 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useExerciseStore } from '../store/exerciseStore';
 import './SettingsScreen.css';
 
 /**
  * Компонент экрана настроек
  */
 export function SettingsScreen({ onGenerate }) {
-    const [settings, setSettings] = useState({
-        addition: {
-            enabled: false,
-            count: 10,
-            digits: 2,
-            terms: 2,
-            useDecimals: false
-        },
-        subtraction: {
-            enabled: false,
-            count: 10,
-            minuendDigits: 2,
-            subtrahendDigits: 2
-        },
-        multiplication: {
-            enabled: false,
-            count: 10,
-            firstDigits: 2,
-            secondDigits: 2,
-            maxResult: 1000
-        },
-        division: {
-            enabled: false,
-            count: 10,
-            dividendDigits: 3,
-            divisorDigits: 1
-        }
-    });
+    const { settings, setSettings } = useExerciseStore();
+
     const handleToggle = (operation) => {
         setSettings(prev => ({
             ...prev,

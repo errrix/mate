@@ -8,6 +8,7 @@ This project is a Vite + React web app for generating printable math exercises i
 - Main app state and screen switching: `src/App.jsx`
 - Settings UI: `src/components/SettingsScreen.jsx`
 - Generated examples screen: `src/components/ExamplesScreen.jsx`
+- App-level store and settings persistence: `src/store/exerciseStore.jsx`
 - Printable notebook grid feature: `src/features/notebookGrid`
 - Math generation logic: `src/generators/*Generator.js`
 - Shared generator utilities: `src/generators/numberUtils.js`
@@ -41,8 +42,9 @@ npm.cmd run build
 - Keep source files encoded as UTF-8.
 - Preserve Russian UI text unless the task asks to rewrite it.
 - Keep changes small and focused.
+- Keep user input settings in the shared store and persisted to `localStorage`.
 - For generator changes, update or add Vitest coverage.
-- For print layout changes, check browser preview when practical and keep DOM/CSS/SVG grid modes using the same placement model.
+- For print layout changes, check browser preview when practical and keep placement logic renderer-independent.
 - Do not duplicate random/range helpers inside generators; use `src/generators/numberUtils.js`.
 
 ## Print Grid Notes
@@ -51,14 +53,11 @@ Addition, subtraction, and multiplication use `src/features/notebookGrid`.
 
 - `pageModel.js` defines the physical A4 grid model.
 - `placement.js` converts examples into `{ row, col, kind, value }` cells.
-- `NotebookGrid.jsx` chooses a renderer by mode.
+- `NotebookGrid.jsx` builds placement and renders the CSS grid.
 - `src/features/notebookGrid/README.md` documents print-specific constraints.
-- Render modes:
-  - `dom`: DOM cells baseline.
-  - `css`: explicit CSS line layer plus overlayed digits.
-  - `svg`: SVG lines and text.
+- Current renderer: `css`, with explicit CSS line layers plus overlayed digits.
 
-All render modes must share the same placement output. Do not fix only one renderer unless the bug is renderer-specific.
+Placement output must stay renderer-independent. If a print bug is caused by coordinates, fix `placement.js`; if coordinates are correct, fix the CSS renderer or print styles.
 
 Decimal addition must align integer and fractional parts separately so commas stay in one column. Decimal comma rendering is intentionally handled as an overlay on the last integer digit cell.
 
