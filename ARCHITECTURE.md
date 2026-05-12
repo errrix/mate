@@ -16,12 +16,13 @@ The app generates math exercises for students and formats printable examples on 
 ## Data Flow
 
 1. `ExerciseStoreProvider` owns shared `settings`.
-2. `SettingsScreen` passes settings to `App` on generate.
-3. `App` verifies that at least one operation is enabled and navigates to `/result-list`.
-4. `ExamplesScreen` reads settings from the shared store, generates examples for the current settings, and groups them by `type`.
-5. Addition/subtraction/multiplication groups render through `NotebookGrid`.
-6. Division groups render through the existing operation-specific component.
-7. Printing is triggered with `window.print()`.
+2. `App` renders the shared site shell (`SiteHeader`, routed page content, `SiteFooter`).
+3. `SettingsScreen` passes settings to `App` on generate.
+4. `App` verifies that at least one operation is enabled and navigates to `/result-list`.
+5. `ExamplesScreen` reads settings from the shared store, generates examples for the current settings, and groups them by `type`.
+6. Addition/subtraction/multiplication groups render through `NotebookGrid`.
+7. Division groups render through the existing operation-specific component.
+8. Printing is triggered with `window.print()`.
 
 ## Client Store
 
@@ -38,12 +39,27 @@ Generated examples are not stored in `localStorage`. `/result-list` generates th
 
 The app uses `react-router-dom` with browser routing.
 
-- `/`: marketing-style home page.
+- `/`: home page with product intro and worksheet preview.
 - `/generator`: settings form.
 - `/result-list`: generated printable examples.
 - `/faq`: FAQ content through `InfoPage`.
 - `/how-it-works`: usage explanation through `InfoPage`.
 - Unknown paths redirect to `/`.
+
+`App.jsx` wraps every route in the same `.container` and shared header/footer. Header and footer are hidden in print mode so the generated A4 output can use the full printed page.
+
+## Layout and Styling
+
+The app uses plain CSS imports. Shared page shell values live in `src/index.css` as CSS custom properties:
+
+- `--site-shell-max-width`: shared app container width, currently `1280px`.
+- `--site-content-max-width`: constrained content width for text-heavy pages.
+- `--site-readable-max-width`: readable line length for paragraph copy.
+- `--site-page-gutter`: responsive outer gutter.
+
+`src/App.css` owns the shared `.container` shell. Route-specific pages should use this shell instead of introducing their own app-level width. Page components can still constrain their own internal content when needed.
+
+`SiteHeader` and `SiteFooter` provide common navigation and footer links across all routes. Do not duplicate header navigation inside page components.
 
 ## Example Shapes
 
@@ -146,7 +162,9 @@ Operation-specific behavior is documented in `docs/OPERATIONS.md`.
 
 `SettingsScreen` reads and writes the shared `settings` object from `ExerciseStoreProvider`. The object contains nested settings for each operation.
 
-The form is still hand-written. When adding controls, keep the current state shape explicit and avoid introducing a second source of truth.
+The form is currently a compact card-based UI. Operation controls are still hand-written. When adding controls, keep the current state shape explicit and avoid introducing a second source of truth.
+
+The age preset selector in `SettingsScreen` is UI-only. It stores the selected age in local component state, changes the competency hint text, and does not mutate operation settings or persist to `localStorage`. The reset button restores `DEFAULT_SETTINGS` and resets the selected age to `6`.
 
 Subtraction uses disabled select options to prevent impossible digit ranges. The UI should make invalid combinations unavailable instead of showing an error for this case.
 
@@ -165,7 +183,8 @@ npm.cmd run build
 
 ## Current Risks
 
-- `SettingsScreen` is still a large hand-written form and should be made config-driven.
+- `SettingsScreen` operation controls are still hand-written and should be made config-driven.
+- The age preset selector is UI-only; future business logic must define how presets map to operation settings before wiring it into the store.
 - `AdditionExample`, `SubtractionExample`, and `MultiplicationExample` are currently unused after the notebook grid refactor; confirm before deleting.
 - Print output depends on browser print behavior and printer settings, so visual checks remain necessary for grid changes.
 - User-facing validation still relies partly on `alert()` and should be improved later.

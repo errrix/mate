@@ -5,7 +5,10 @@ This project is a Vite + React web app for generating printable math exercises i
 ## Project Overview
 
 - Entry point: `src/main.jsx`
-- Main app state and screen switching: `src/App.jsx`
+- Main app layout, shared header/footer, and route switching: `src/App.jsx`
+- Shared site chrome: `src/components/SiteHeader.jsx`, `src/components/SiteFooter.jsx`
+- Global layout tokens and container sizing: `src/index.css`, `src/App.css`
+- Home page: `src/components/HomePage.jsx`
 - Settings UI: `src/components/SettingsScreen.jsx`
 - Generated examples screen: `src/components/ExamplesScreen.jsx`
 - App-level store and settings persistence: `src/store/exerciseStore.jsx`
@@ -42,6 +45,8 @@ npm.cmd run build
 - Keep source files encoded as UTF-8.
 - Preserve Russian UI text unless the task asks to rewrite it.
 - Keep changes small and focused.
+- Keep shared container/header/footer behavior centralized in `App.jsx`, `App.css`, `index.css`, `SiteHeader`, and `SiteFooter`.
+- Do not add route-specific app shell widths unless a print/layout requirement makes it necessary.
 - Keep user input settings in the shared store and persisted to `localStorage`.
 - For generator changes, update or add Vitest coverage.
 - For print layout changes, check browser preview when practical and keep placement logic renderer-independent.
@@ -63,7 +68,8 @@ Decimal addition must align integer and fractional parts separately so commas st
 
 ## Current Priorities
 
-1. Refactor `SettingsScreen` into config-driven controls.
+1. Refactor `SettingsScreen` operation controls into config-driven controls.
 2. Remove dead components if `AdditionExample`, `SubtractionExample`, and `MultiplicationExample` remain unused.
 3. Improve user-facing validation/errors for impossible settings.
-4. Keep print grid changes isolated and test placement logic directly.
+4. Decide whether the age preset selector should become real business logic or remain UI-only.
+5. Keep print grid changes isolated and test placement logic directly.

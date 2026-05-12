@@ -4,6 +4,15 @@
     box-sizing: border-box;
 }
 
+:root {
+    --site-shell-max-width: 1280px;
+    --site-content-max-width: 980px;
+    --site-readable-max-width: 720px;
+    --site-page-gutter: clamp(16px, 3vw, 24px);
+    --site-card-radius: 15px;
+    --site-card-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f7faf8;

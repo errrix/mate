@@ -1,12 +1,37 @@
-import React from 'react';
-import { useExerciseStore } from '../store/exerciseStore';
+import React, { useMemo, useState } from 'react';
+import { DEFAULT_SETTINGS, useExerciseStore } from '../store/exerciseStore';
 import './SettingsScreen.css';
 
-/**
- * Компонент экрана настроек
- */
+const AGE_HINTS = {
+    6: 'Счет в пределах 10, простое сложение и вычитание, сравнение чисел, работа с составом числа.',
+    7: 'Сложение и вычитание в пределах 20, переход через десяток, простые текстовые задачи.',
+    8: 'Сложение и вычитание двузначных чисел, первые примеры на умножение и деление.',
+    9: 'Таблица умножения, деление нацело, многозначные вычисления без сложных дробей.',
+    10: 'Уверенные действия с многозначными числами, умножение, деление и первые десятичные числа.'
+};
+
+const AGE_OPTIONS = [6, 7, 8, 9, 10];
+
+const cloneDefaultSettings = () => ({
+    addition: { ...DEFAULT_SETTINGS.addition },
+    subtraction: { ...DEFAULT_SETTINGS.subtraction },
+    multiplication: { ...DEFAULT_SETTINGS.multiplication },
+    division: { ...DEFAULT_SETTINGS.division }
+});
+
 export function SettingsScreen({ onGenerate }) {
     const { settings, setSettings } = useExerciseStore();
+    const [selectedAge, setSelectedAge] = useState(6);
+
+    const summary = useMemo(() => {
+        const enabledOperations = Object.values(settings).filter(operation => operation.enabled);
+        const examplesCount = enabledOperations.reduce((total, operation) => total + Number(operation.count || 0), 0);
+
+        return {
+            operationsCount: enabledOperations.length,
+            examplesCount
+        };
+    }, [settings]);
 
     const handleToggle = (operation) => {
         setSettings(prev => ({
@@ -35,232 +60,300 @@ export function SettingsScreen({ onGenerate }) {
         }));
     };
 
+    const handleReset = () => {
+        setSelectedAge(6);
+        setSettings(cloneDefaultSettings());
+    };
+
     const handleGenerate = () => {
         onGenerate(settings);
     };
 
-    return (
-        <div className="screen active">
-            <h1>Настройка примеров</h1>
+    const renderCardClassName = (operation) => (
+        `operation-card ${settings[operation].enabled ? 'active' : 'inactive'}`
+    );
 
-            {/* Сложение */}
-            <div className={`operation-block ${settings.addition.enabled ? 'active' : ''}`}>
-                <div className="operation-header">
-                    <input 
-                        type="checkbox" 
-                        id="additionEnabled"
-                        checked={settings.addition.enabled}
-                        onChange={() => handleToggle('addition')}
-                    />
-                    <label htmlFor="additionEnabled">Сложение</label>
+    return (
+        <div className="screen active settings-screen">
+            <header className="settings-header">
+                <div>
+                    <p className="settings-kicker">Генератор заданий</p>
+                    <h1>Быстрая настройка</h1>
+                    <p className="settings-subtitle">Выберите возраст и настройте операции вручную</p>
                 </div>
-                <div className="operation-settings">
-                    <div className="setting-group">
-                        <label>Количество примеров:</label>
-                        <input 
-                            type="number" 
-                            min="1" 
-                            max="100" 
-                            value={settings.addition.count}
-                            onChange={(e) => handleChange('addition', 'count', e.target.value)}
-                        />
-                    </div>
-                    <div className="setting-group">
-                        <label>Разрядность чисел:</label>
-                        <select 
-                            value={settings.addition.digits}
-                            onChange={(e) => handleChange('addition', 'digits', e.target.value)}
-                        >
-                            <option value="1">Однозначные (1-9)</option>
-                            <option value="2">Двузначные (10-99)</option>
-                            <option value="3">Трехзначные (100-999)</option>
-                            <option value="4">Четырехзначные (1000-9999)</option>
-                        </select>
-                    </div>
-                    <div className="setting-group">
-                        <label>Количество слагаемых:</label>
-                        <select 
-                            value={settings.addition.terms}
-                            onChange={(e) => handleChange('addition', 'terms', e.target.value)}
-                        >
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                        </select>
-                    </div>
-                    <div className="setting-group checkbox-setting">
-                        <label>
+            </header>
+
+            <section className="preset-panel" aria-label="Готовые настройки">
+                <label htmlFor="agePreset">Готовые настройки:</label>
+                <select
+                    id="agePreset"
+                    value={selectedAge}
+                    onChange={(event) => setSelectedAge(Number(event.target.value))}
+                >
+                    {AGE_OPTIONS.map(age => (
+                        <option key={age} value={age}>{age} лет</option>
+                    ))}
+                </select>
+            </section>
+
+            <section className="operations-grid" aria-label="Операции">
+                <article className={renderCardClassName('addition')}>
+                    <OperationHeader
+                        id="additionEnabled"
+                        enabled={settings.addition.enabled}
+                        symbol="+"
+                        title="Сложение"
+                        onToggle={() => handleToggle('addition')}
+                    />
+                    <div className="operation-settings compact">
+                        <SettingGroup label="Количество">
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={settings.addition.count}
+                                disabled={!settings.addition.enabled}
+                                onChange={(event) => handleChange('addition', 'count', event.target.value)}
+                            />
+                        </SettingGroup>
+                        <SettingGroup label="Разрядность">
+                            <select
+                                value={settings.addition.digits}
+                                disabled={!settings.addition.enabled}
+                                onChange={(event) => handleChange('addition', 'digits', event.target.value)}
+                            >
+                                <option value="1">Однозначные (1-9)</option>
+                                <option value="2">Двузначные (10-99)</option>
+                                <option value="3">Трехзначные (100-999)</option>
+                                <option value="4">Четырехзначные (1000-9999)</option>
+                            </select>
+                        </SettingGroup>
+                        <SettingGroup label="Слагаемых">
+                            <select
+                                value={settings.addition.terms}
+                                disabled={!settings.addition.enabled}
+                                onChange={(event) => handleChange('addition', 'terms', event.target.value)}
+                            >
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </SettingGroup>
+                        <label className="inline-checkbox">
                             <input
                                 type="checkbox"
                                 checked={settings.addition.useDecimals}
-                                onChange={(e) => handleChange('addition', 'useDecimals', e.target.checked)}
+                                disabled={!settings.addition.enabled}
+                                onChange={(event) => handleChange('addition', 'useDecimals', event.target.checked)}
                             />
-                            Числа с запятой
+                            <span>Числа с запятой</span>
                         </label>
                     </div>
-                </div>
-            </div>
+                </article>
 
-            {/* Вычитание */}
-            <div className={`operation-block ${settings.subtraction.enabled ? 'active' : ''}`}>
-                <div className="operation-header">
-                    <input 
-                        type="checkbox" 
+                <article className={renderCardClassName('subtraction')}>
+                    <OperationHeader
                         id="subtractionEnabled"
-                        checked={settings.subtraction.enabled}
-                        onChange={() => handleToggle('subtraction')}
+                        enabled={settings.subtraction.enabled}
+                        symbol="−"
+                        title="Вычитание"
+                        onToggle={() => handleToggle('subtraction')}
                     />
-                    <label htmlFor="subtractionEnabled">Вычитание</label>
-                </div>
-                <div className="operation-settings">
-                    <div className="setting-group">
-                        <label>Количество примеров:</label>
-                        <input 
-                            type="number" 
-                            min="1" 
-                            max="100" 
-                            value={settings.subtraction.count}
-                            onChange={(e) => handleChange('subtraction', 'count', e.target.value)}
-                        />
+                    <div className="operation-settings compact">
+                        <SettingGroup label="Количество">
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={settings.subtraction.count}
+                                disabled={!settings.subtraction.enabled}
+                                onChange={(event) => handleChange('subtraction', 'count', event.target.value)}
+                            />
+                        </SettingGroup>
+                        <SettingGroup label="Уменьшаемое">
+                            <select
+                                value={settings.subtraction.minuendDigits}
+                                disabled={!settings.subtraction.enabled}
+                                onChange={(event) => handleChange('subtraction', 'minuendDigits', event.target.value)}
+                            >
+                                <option value="1">Однозначные (1-9)</option>
+                                <option value="2">Двузначные (10-99)</option>
+                                <option value="3">Трехзначные (100-999)</option>
+                                <option value="4">Четырехзначные (1000-9999)</option>
+                            </select>
+                        </SettingGroup>
+                        <SettingGroup label="Вычитаемое">
+                            <select
+                                value={settings.subtraction.subtrahendDigits}
+                                disabled={!settings.subtraction.enabled}
+                                onChange={(event) => handleChange('subtraction', 'subtrahendDigits', event.target.value)}
+                            >
+                                <option value="1">Однозначные (1-9)</option>
+                                <option value="2" disabled={settings.subtraction.minuendDigits < 2}>Двузначные (10-99)</option>
+                                <option value="3" disabled={settings.subtraction.minuendDigits < 3}>Трехзначные (100-999)</option>
+                                <option value="4" disabled={settings.subtraction.minuendDigits < 4}>Четырехзначные (1000-9999)</option>
+                            </select>
+                        </SettingGroup>
                     </div>
-                    <div className="setting-group">
-                        <label>Разрядность уменьшаемого:</label>
-                        <select 
-                            value={settings.subtraction.minuendDigits}
-                            onChange={(e) => handleChange('subtraction', 'minuendDigits', e.target.value)}
-                        >
-                            <option value="1">Однозначные (1-9)</option>
-                            <option value="2">Двузначные (10-99)</option>
-                            <option value="3">Трехзначные (100-999)</option>
-                            <option value="4">Четырехзначные (1000-9999)</option>
-                        </select>
-                    </div>
-                    <div className="setting-group">
-                        <label>Разрядность вычитаемого:</label>
-                        <select 
-                            value={settings.subtraction.subtrahendDigits}
-                            onChange={(e) => handleChange('subtraction', 'subtrahendDigits', e.target.value)}
-                        >
-                            <option value="1">Однозначные (1-9)</option>
-                            <option value="2" disabled={settings.subtraction.minuendDigits < 2}>Двузначные (10-99)</option>
-                            <option value="3" disabled={settings.subtraction.minuendDigits < 3}>Трехзначные (100-999)</option>
-                            <option value="4" disabled={settings.subtraction.minuendDigits < 4}>Четырехзначные (1000-9999)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+                </article>
 
-            {/* Умножение */}
-            <div className={`operation-block ${settings.multiplication.enabled ? 'active' : ''}`}>
-                <div className="operation-header">
-                    <input 
-                        type="checkbox" 
+                <article className={renderCardClassName('multiplication')}>
+                    <OperationHeader
                         id="multiplicationEnabled"
-                        checked={settings.multiplication.enabled}
-                        onChange={() => handleToggle('multiplication')}
+                        enabled={settings.multiplication.enabled}
+                        symbol="×"
+                        title="Умножение"
+                        onToggle={() => handleToggle('multiplication')}
                     />
-                    <label htmlFor="multiplicationEnabled">Умножение</label>
-                </div>
-                <div className="operation-settings">
-                    <div className="setting-group">
-                        <label>Количество примеров:</label>
-                        <input 
-                            type="number" 
-                            min="1" 
-                            max="100" 
-                            value={settings.multiplication.count}
-                            onChange={(e) => handleChange('multiplication', 'count', e.target.value)}
-                        />
+                    <div className="operation-settings compact">
+                        <SettingGroup label="Количество">
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={settings.multiplication.count}
+                                disabled={!settings.multiplication.enabled}
+                                onChange={(event) => handleChange('multiplication', 'count', event.target.value)}
+                            />
+                        </SettingGroup>
+                        <SettingGroup label="Первый множитель">
+                            <select
+                                value={settings.multiplication.firstDigits}
+                                disabled={!settings.multiplication.enabled}
+                                onChange={(event) => handleChange('multiplication', 'firstDigits', event.target.value)}
+                            >
+                                <option value="1">Однозначные (1-9)</option>
+                                <option value="2">Двузначные (10-99)</option>
+                                <option value="3">Трехзначные (100-999)</option>
+                            </select>
+                        </SettingGroup>
+                        <SettingGroup label="Второй множитель">
+                            <select
+                                value={settings.multiplication.secondDigits}
+                                disabled={!settings.multiplication.enabled}
+                                onChange={(event) => handleChange('multiplication', 'secondDigits', event.target.value)}
+                            >
+                                <option value="1">Однозначные (1-9)</option>
+                                <option value="2">Двузначные (10-99)</option>
+                                <option value="3">Трехзначные (100-999)</option>
+                            </select>
+                        </SettingGroup>
+                        <SettingGroup label="Макс. результат">
+                            <select
+                                value={settings.multiplication.maxResult}
+                                disabled={!settings.multiplication.enabled}
+                                onChange={(event) => handleChange('multiplication', 'maxResult', event.target.value)}
+                            >
+                                <option value="0">Без ограничений</option>
+                                <option value="100">До 100</option>
+                                <option value="1000">До 1000</option>
+                                <option value="10000">До 10000</option>
+                            </select>
+                        </SettingGroup>
                     </div>
-                    <div className="setting-group">
-                        <label>Разрядность первого множителя:</label>
-                        <select 
-                            value={settings.multiplication.firstDigits}
-                            onChange={(e) => handleChange('multiplication', 'firstDigits', e.target.value)}
-                        >
-                            <option value="1">Однозначные (1-9)</option>
-                            <option value="2">Двузначные (10-99)</option>
-                            <option value="3">Трехзначные (100-999)</option>
-                        </select>
-                    </div>
-                    <div className="setting-group">
-                        <label>Разрядность второго множителя:</label>
-                        <select 
-                            value={settings.multiplication.secondDigits}
-                            onChange={(e) => handleChange('multiplication', 'secondDigits', e.target.value)}
-                        >
-                            <option value="1">Однозначные (1-9)</option>
-                            <option value="2">Двузначные (10-99)</option>
-                            <option value="3">Трехзначные (100-999)</option>
-                        </select>
-                    </div>
-                    <div className="setting-group">
-                        <label>Максимальный результат:</label>
-                        <select 
-                            value={settings.multiplication.maxResult}
-                            onChange={(e) => handleChange('multiplication', 'maxResult', e.target.value)}
-                        >
-                            <option value="0">Без ограничений</option>
-                            <option value="100">До 100</option>
-                            <option value="1000">До 1000</option>
-                            <option value="10000">До 10000</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+                </article>
 
-            {/* Деление */}
-            <div className={`operation-block ${settings.division.enabled ? 'active' : ''}`}>
-                <div className="operation-header">
-                    <input 
-                        type="checkbox" 
+                <article className={renderCardClassName('division')}>
+                    <OperationHeader
                         id="divisionEnabled"
-                        checked={settings.division.enabled}
-                        onChange={() => handleToggle('division')}
+                        enabled={settings.division.enabled}
+                        symbol="÷"
+                        title="Деление"
+                        onToggle={() => handleToggle('division')}
                     />
-                    <label htmlFor="divisionEnabled">Деление</label>
-                </div>
-                <div className="operation-settings">
-                    <div className="setting-group">
-                        <label>Количество примеров:</label>
-                        <input 
-                            type="number" 
-                            min="1" 
-                            max="100" 
-                            value={settings.division.count}
-                            onChange={(e) => handleChange('division', 'count', e.target.value)}
-                        />
+                    <div className="operation-settings compact">
+                        <SettingGroup label="Количество">
+                            <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={settings.division.count}
+                                disabled={!settings.division.enabled}
+                                onChange={(event) => handleChange('division', 'count', event.target.value)}
+                            />
+                        </SettingGroup>
+                        <SettingGroup label="Делимое">
+                            <select
+                                value={settings.division.dividendDigits}
+                                disabled={!settings.division.enabled}
+                                onChange={(event) => handleChange('division', 'dividendDigits', event.target.value)}
+                            >
+                                <option value="2">Двузначные (10-99)</option>
+                                <option value="3">Трехзначные (100-999)</option>
+                                <option value="4">Четырехзначные (1000-9999)</option>
+                            </select>
+                        </SettingGroup>
+                        <SettingGroup label="Делитель">
+                            <select
+                                value={settings.division.divisorDigits}
+                                disabled={!settings.division.enabled}
+                                onChange={(event) => handleChange('division', 'divisorDigits', event.target.value)}
+                            >
+                                <option value="1">Однозначные (1-9)</option>
+                                <option value="2">Двузначные (10-99)</option>
+                            </select>
+                        </SettingGroup>
                     </div>
-                    <div className="setting-group">
-                        <label>Разрядность делимого:</label>
-                        <select 
-                            value={settings.division.dividendDigits}
-                            onChange={(e) => handleChange('division', 'dividendDigits', e.target.value)}
-                        >
-                            <option value="2">Двузначные (10-99)</option>
-                            <option value="3">Трехзначные (100-999)</option>
-                            <option value="4">Четырехзначные (1000-9999)</option>
-                        </select>
-                    </div>
-                    <div className="setting-group">
-                        <label>Разрядность делителя:</label>
-                        <select 
-                            value={settings.division.divisorDigits}
-                            onChange={(e) => handleChange('division', 'divisorDigits', e.target.value)}
-                        >
-                            <option value="1">Однозначные (1-9)</option>
-                            <option value="2">Двузначные (10-99)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+                </article>
+            </section>
 
-            <div className="button-group">
-                <button className="btn-primary" onClick={handleGenerate}>
-                    Сгенерировать примеры
+            <section className="hint-panel" aria-live="polite">
+                <div className="hint-icon" aria-hidden="true">i</div>
+                <div>
+                    <h2>Подсказка</h2>
+                    <p>Для {selectedAge} лет: {AGE_HINTS[selectedAge]}</p>
+                </div>
+            </section>
+
+            <footer className="settings-footer">
+                <button type="button" className="btn-secondary" onClick={handleReset}>
+                    Сбросить настройки
                 </button>
-            </div>
+                <div className="settings-summary" aria-live="polite">
+                    <p>Будет создано: <strong>{summary.examplesCount}</strong> примеров</p>
+                    <span>Выбрано операций: {summary.operationsCount}</span>
+                </div>
+                <button type="button" className="btn-primary" onClick={handleGenerate}>
+                    Создать примеры
+                </button>
+            </footer>
         </div>
+    );
+}
+
+function OperationHeader({ id, enabled, symbol, title, onToggle }) {
+    return (
+        <div className="operation-header">
+            <label className="operation-check" htmlFor={id}>
+                <input
+                    type="checkbox"
+                    id={id}
+                    checked={enabled}
+                    onChange={onToggle}
+                />
+                <span aria-hidden="true" />
+            </label>
+            <span className="operation-symbol" aria-hidden="true">{symbol}</span>
+            <label className="operation-title" htmlFor={id}>{title}</label>
+            <button
+                type="button"
+                className="operation-toggle"
+                aria-label={`${enabled ? 'Выключить' : 'Включить'} ${title.toLowerCase()}`}
+                aria-pressed={enabled}
+                onClick={onToggle}
+            >
+                <span />
+            </button>
+        </div>
+    );
+}
+
+function SettingGroup({ label, children }) {
+    return (
+        <label className="setting-group">
+            <span>{label}</span>
+            {children}
+        </label>
     );
 }

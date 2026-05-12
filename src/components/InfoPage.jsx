@@ -1,6 +1,4 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import './HomePage.css';
 import './InfoPage.css';
 
 const pageContent = {
@@ -42,35 +40,11 @@ const pageContent = {
     }
 };
 
-function LogoMark() {
-    return (
-        <span className="home-logo-mark" aria-hidden="true">
-            <span />
-        </span>
-    );
-}
-
 export function InfoPage({ type }) {
     const content = pageContent[type];
 
     return (
-        <main className="home-page info-page">
-            <header className="home-nav">
-                <Link className="home-brand home-brand-link" to="/">
-                    <LogoMark />
-                    <div>
-                        <strong>Математика. Печать заданий</strong>
-                        <span>Генератор примеров для школы и дома</span>
-                    </div>
-                </Link>
-
-                <nav className="home-tabs" aria-label="Основная навигация">
-                    <NavLink to="/generator">Генератор</NavLink>
-                    <NavLink to="/how-it-works">Как это работает</NavLink>
-                    <NavLink to="/faq">FAQ</NavLink>
-                </nav>
-            </header>
-
+        <section className="info-page">
             <section className="info-content">
                 <h1>{content.title}</h1>
                 <p>{content.lead}</p>
@@ -83,6 +57,6 @@ export function InfoPage({ type }) {
                     ))}
                 </div>
             </section>
-        </main>
+        </section>
     );
 }

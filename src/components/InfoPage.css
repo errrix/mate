@@ -1,13 +1,10 @@
 .info-page {
-    min-height: 100vh;
-}
-
-.home-brand-link {
-    text-decoration: none;
+    min-height: 560px;
+    background: #ffffff;
 }
 
 .info-content {
-    width: min(980px, calc(100% - 48px));
+    width: min(var(--site-content-max-width), calc(100% - var(--site-page-gutter) * 2));
     margin: 0 auto;
     padding: 72px 0 96px;
 }
@@ -21,7 +18,7 @@
 }
 
 .info-content > p {
-    max-width: 720px;
+    max-width: var(--site-readable-max-width);
     margin: 22px 0 0;
     color: #5f6876;
     font-size: 1.18rem;

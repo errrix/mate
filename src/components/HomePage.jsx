@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './HomePage.css';
 
 const worksheetExamples = [
@@ -21,59 +21,46 @@ const worksheetExamples = [
     { top: '683', operator: '-', bottom: '274' }
 ];
 
-
 const featureItems = [
     {
-        icon: 'target',
-        title: 'Подходит для разных возрастов и уровней'
-    },
-    {
-        icon: 'grid',
-        title: 'Аккуратная тетрадная сетка 7 мм'
+        icon: 'doc',
+        title: 'A4 и тетрадная сетка',
+        text: 'Выберите формат листа и вид разметки.'
     },
     {
         icon: 'sliders',
-        title: 'Настройте примеры под задачу'
+        title: 'Гибкие настройки',
+        text: 'Количество, разрядность, слагаемые и другие параметры.'
     },
     {
         icon: 'printer',
-        title: 'Печать в один клик, экономия бумаги'
+        title: 'Готово к печати',
+        text: 'Аккуратный результат на одном листе. Можно печатать сразу.'
     }
 ];
 
-function LogoMark() {
-    return (
-        <span className="home-logo-mark" aria-hidden="true">
-            <span />
-        </span>
-    );
-}
-
 function WorksheetExample({ top, operator, bottom }) {
     return (
-        <div className="worksheet-example">
-            <div className="worksheet-top">{top}</div>
-            <div className="worksheet-bottom">
+        <div className="home-worksheet-example">
+            <div className="home-worksheet-top">{top}</div>
+            <div className="home-worksheet-bottom">
                 <span>{operator}</span>
                 <strong>{bottom}</strong>
             </div>
-            <div className="worksheet-line" />
+            <div className="home-worksheet-line" />
         </div>
     );
 }
 
 function WorksheetPreview() {
     return (
-        <div className="desk-scene" aria-label="Пример печатного листа">
-            <div className="desk-plant" aria-hidden="true" />
-            <div className="desk-eraser" aria-hidden="true" />
-            <div className="desk-pencil" aria-hidden="true" />
-            <div className="worksheet-paper">
-                <div className="worksheet-header">
+        <div className="home-preview" aria-label="Пример печатного листа">
+            <div className="home-preview-paper">
+                <div className="home-preview-header">
                     <span>Сложение и вычитание в столбик</span>
-                    <span>Дата: __________</span>
+                    <span>Дата: _________</span>
                 </div>
-                <div className="worksheet-grid">
+                <div className="home-preview-grid">
                     {worksheetExamples.map((example, index) => (
                         <WorksheetExample
                             key={`${example.top}-${index}`}
@@ -89,94 +76,44 @@ function WorksheetPreview() {
 }
 
 function FeatureIcon({ type }) {
-    return <span className={`feature-icon feature-icon-${type}`} aria-hidden="true" />;
+    return <span className={`home-feature-icon home-feature-icon-${type}`} aria-hidden="true" />;
 }
 
-function HeroSection() {
+export function HomePage() {
     return (
-        <section className="home-hero">
-            <div className="home-hero-copy">
+        <section className="home-page">
+            <div className="home-copy">
+                <p className="home-kicker">Добро пожаловать!</p>
                 <h1>Печатные задания по математике</h1>
                 <p className="home-lead">
-                    Генерируйте примеры на сложение, вычитание и умножение в столбик.
-                    Удобная настройка, понятный результат и аккуратная тетрадная сетка
-                    для печати на одном листе A4.
+                    Создавайте аккуратные листы с примерами для школы и дома.
                 </p>
 
                 <div className="home-actions">
                     <Link className="home-primary" to="/generator">
-                        <span className="button-icon button-icon-doc" aria-hidden="true" />
+                        <span className="home-button-icon home-button-icon-doc" aria-hidden="true" />
                         Создать задания
                     </Link>
-                    <Link className="home-secondary" to="/generator">
-                        <span className="button-icon button-icon-eye" aria-hidden="true" />
-                        Пример листа
+                    <Link className="home-secondary" to="/how-it-works">
+                        <span className="home-button-icon home-button-icon-eye" aria-hidden="true" />
+                        Как это работает
                     </Link>
                 </div>
 
-                <div className="home-highlights">
-                    <div>
-                        <span className="mini-icon mini-icon-print" aria-hidden="true" />
-                        <p><strong>Готово к печати</strong>A4, тетрадная сетка 7 мм</p>
-                    </div>
-                    <div>
-                        <span className="mini-icon mini-icon-sliders" aria-hidden="true" />
-                        <p><strong>Гибкие настройки</strong>уровень, диапазоны, количество</p>
-                    </div>
-                    <div>
-                        <span className="mini-icon mini-icon-check" aria-hidden="true" />
-                        <p><strong>Экономит время</strong>для учителей и родителей</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="home-hero-visual">
-                <WorksheetPreview />
-            </div>
-        </section>
-    );
-}
-
-
-export function HomePage() {
-    return (
-        <main className="home-page">
-            <header className="home-nav">
-                <Link className="home-brand" to="/">
-                    <LogoMark />
-                    <div>
-                        <strong>Математика. Печать заданий</strong>
-                        <span>Генератор примеров для школы и дома</span>
-                    </div>
-                </Link>
-
-                <nav className="home-tabs" aria-label="Основная навигация">
-                    <NavLink to="/generator">Генератор</NavLink>
-                    <NavLink to="/how-it-works">Как это работает</NavLink>
-                    <NavLink to="/faq">FAQ</NavLink>
-                </nav>
-
-                <div className="home-nav-extra">
-                    <span className="home-sun" aria-hidden="true" />
-                    <Link to="/faq">О генераторе</Link>
-                </div>
-            </header>
-
-            <HeroSection />
-
-            <section className="home-benefits" id="how-it-works">
-                <h2>Почему удобно</h2>
-                <div className="benefit-list" id="print">
+                <div className="home-feature-list">
                     {featureItems.map((item) => (
-                        <div className="benefit-item" key={item.icon}>
+                        <article className="home-feature-item" key={item.icon}>
                             <FeatureIcon type={item.icon} />
-                            <strong>{item.title}</strong>
-                        </div>
+                            <div>
+                                <h2>{item.title}</h2>
+                                <p>{item.text}</p>
+                            </div>
+                        </article>
                     ))}
                 </div>
-            </section>
+            </div>
 
-            <span id="about" className="home-anchor" aria-hidden="true" />
-        </main>
+            <WorksheetPreview />
+        </section>
     );
 }
