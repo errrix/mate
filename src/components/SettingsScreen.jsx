@@ -55,6 +55,11 @@ export function SettingsScreen({ onGenerate }) {
                     && field === 'minuendDigits'
                     && prev.subtraction.subtrahendDigits > parsedValue
                     ? { subtrahendDigits: parsedValue }
+                    : {}),
+                ...(operation === 'multiplication'
+                    && field === 'firstDigits'
+                    && prev.multiplication.secondDigits > parsedValue
+                    ? { secondDigits: parsedValue }
                     : {})
             }
         }));
@@ -195,6 +200,15 @@ export function SettingsScreen({ onGenerate }) {
                                 <option value="4" disabled={settings.subtraction.minuendDigits < 4}>Четырехзначные (1000-9999)</option>
                             </select>
                         </SettingGroup>
+                        <label className="inline-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={settings.subtraction.useDecimals}
+                                disabled={!settings.subtraction.enabled}
+                                onChange={(event) => handleChange('subtraction', 'useDecimals', event.target.checked)}
+                            />
+                            <span>Числа с запятой</span>
+                        </label>
                     </div>
                 </article>
 
@@ -235,20 +249,8 @@ export function SettingsScreen({ onGenerate }) {
                                 onChange={(event) => handleChange('multiplication', 'secondDigits', event.target.value)}
                             >
                                 <option value="1">Однозначные (1-9)</option>
-                                <option value="2">Двузначные (10-99)</option>
-                                <option value="3">Трехзначные (100-999)</option>
-                            </select>
-                        </SettingGroup>
-                        <SettingGroup label="Макс. результат">
-                            <select
-                                value={settings.multiplication.maxResult}
-                                disabled={!settings.multiplication.enabled}
-                                onChange={(event) => handleChange('multiplication', 'maxResult', event.target.value)}
-                            >
-                                <option value="0">Без ограничений</option>
-                                <option value="100">До 100</option>
-                                <option value="1000">До 1000</option>
-                                <option value="10000">До 10000</option>
+                                <option value="2" disabled={settings.multiplication.firstDigits < 2}>Двузначные (10-99)</option>
+                                <option value="3" disabled={settings.multiplication.firstDigits < 3}>Трехзначные (100-999)</option>
                             </select>
                         </SettingGroup>
                     </div>

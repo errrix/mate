@@ -20,9 +20,8 @@ The app generates math exercises for students and formats printable examples on 
 3. `SettingsScreen` passes settings to `App` on generate.
 4. `App` verifies that at least one operation is enabled and navigates to `/result-list`.
 5. `ExamplesScreen` reads settings from the shared store, generates examples for the current settings, and groups them by `type`.
-6. Addition/subtraction/multiplication groups render through `NotebookGrid`.
-7. Division groups render through the existing operation-specific component.
-8. Printing is triggered with `window.print()`.
+6. Addition/subtraction/multiplication/division groups render through `NotebookGrid`.
+7. Printing is triggered with `window.print()`.
 
 ## Client Store
 
@@ -115,7 +114,7 @@ Division:
 
 Renderer implementations should not decide where digits go. Placement must stay renderer-independent.
 
-The grid currently supports addition, subtraction, and multiplication. Division has a separate visual component and is not part of the shared grid yet.
+The grid currently supports addition, subtraction, multiplication, and division.
 
 ### Placement Details
 
@@ -137,6 +136,10 @@ The answer line spans `parsed.maxLength` cells. For decimal examples this includ
 
 Examples are packed into row bands by actual cell width. Placement reserves `2` empty cells on the left and right page edges, keeps at least `2` empty cells between neighboring examples, distributes extra horizontal space across non-final row gaps, and left-aligns the final row with the minimum gap.
 
+Multiplication reserves vertical work space below the answer line based on the digit count of the second factor: one row for a one-digit multiplier, or one row per multiplier digit plus a final result row for multi-digit multipliers, followed by one blank row before the next band.
+
+Division renders a long-division corner on the shared grid: dividend digits on the left, a vertical separator, divisor digits on the right, and a horizontal answer line below the divisor/quotient area. Placement reserves work rows based on the quotient digit count and one blank row before the next band.
+
 ### Renderer
 
 The CSS renderer consumes the shared `cells` array from placement.
@@ -153,7 +156,6 @@ Generators live in `src/generators`.
 - `numberUtils.js` owns digit ranges and random integer helpers.
 - Addition/subtraction/multiplication/division generators all use shared helpers.
 - Addition can generate decimal strings through the shared decimal helper.
-- Multiplication throws `RangeError` when `maxResult` is impossible.
 - Division computes a valid quotient range for the selected divisor and does not use retry loops.
 
 Operation-specific behavior is documented in `docs/OPERATIONS.md`.

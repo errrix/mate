@@ -1,19 +1,9 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { DivisionExample } from './DivisionExample';
 import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
 import { useExerciseStore } from '../store/exerciseStore';
 import { generateExamplesFromSettings } from '../generators/generateExamplesFromSettings';
 import './ExamplesScreen.css';
-
-function renderExample(example, index) {
-    switch (example.type) {
-        case 'division':
-            return <DivisionExample key={index} example={example} />;
-        default:
-            return null;
-    }
-}
 
 function groupExamples(examples) {
     return examples.reduce((acc, example, index) => {
@@ -103,13 +93,18 @@ export function ExamplesScreen({ onBack }) {
                     );
                 }
 
-                return (
-                    <div key={type} className="examples-section">
-                        <div className="examples-container">
-                            {items.map(({ example, index }) => renderExample(example, index))}
-                        </div>
-                    </div>
-                );
+                if (type === 'division') {
+                    return (
+                        <NotebookGrid
+                            key={type}
+                            title="Деление"
+                            items={items}
+                            operator="÷"
+                        />
+                    );
+                }
+
+                return null;
             })}
             <div className="button-group">
                 <button className="btn-primary" onClick={() => window.print()}>

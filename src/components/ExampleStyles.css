@@ -91,32 +91,3 @@
     width: 100%;
 }
 
-.division-example {
-    display: inline-block;
-    position: relative;
-    font-size: 1.1em;
-    line-height: 1.6;
-    min-width: 120px;
-}
-
-.division-example .divisor {
-    position: absolute;
-    left: 0;
-    top: 0;
-    padding-right: 8px;
-}
-
-.division-example .dividend {
-    text-align: right;
-    padding: 5px 10px 5px 25px;
-    border-left: 1px solid #333;
-    border-top: 1px solid #333;
-    display: block;
-}
-
-.division-example .line {
-    border-top: 1px solid #333;
-    margin-top: 5px;
-    padding-left: 25px;
-    display: block;
-}

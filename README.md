@@ -48,8 +48,7 @@ src/
 │   ├── SiteFooter.jsx       # Общий футер сайта
 │   ├── HomePage.jsx
 │   ├── SettingsScreen.jsx
-│   ├── ExamplesScreen.jsx
-│   └── DivisionExample.jsx
+│   └── ExamplesScreen.jsx
 ├── features/
 │   └── notebookGrid/        # Печатная тетрадная сетка
 ├── store/

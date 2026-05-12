@@ -5,6 +5,7 @@ export const DEFAULT_NOTEBOOK_LAYOUT = {
     topPaddingRows: 1,
     minColsPerExample: 6,
     minGapColsBetweenExamples: 2,
+    maxGapColsBetweenExamples: 3,
     sidePaddingCols: 2
 };
 
@@ -78,6 +79,101 @@ export function parseVerticalNumbers(example) {
     };
 }
 
+function getNumberTokens(value) {
+    return String(value).split('').map((digit) => ({ value: digit }));
+}
+
+function getDigitCount(value) {
+    return String(value).replace(/\D/g, '').length;
+}
+
+function parseDivisionExample(example) {
+    const dividendTokens = getNumberTokens(example.dividend);
+    const divisorTokens = getNumberTokens(example.divisor);
+    const quotient = Math.floor(example.dividend / example.divisor);
+    const quotientLength = getDigitCount(quotient);
+    const answerWidth = Math.max(divisorTokens.length, quotientLength, 2);
+
+    return {
+        kind: 'division',
+        dividendTokens,
+        divisorTokens,
+        quotientLength,
+        answerWidth,
+        width: dividendTokens.length + 1 + answerWidth,
+        height: 2 + quotientLength + 2
+    };
+}
+
+function normalizeDivisionWidths(parsedExamples) {
+    const divisionExamples = parsedExamples.filter(({ parsed }) => parsed.kind === 'division');
+
+    if (divisionExamples.length === 0) {
+        return parsedExamples;
+    }
+
+    const maxAnswerWidth = Math.max(...divisionExamples.map(({ parsed }) => parsed.answerWidth));
+    const maxHeight = Math.max(...divisionExamples.map(({ parsed }) => parsed.height));
+
+    return parsedExamples.map((parsedExample) => {
+        if (parsedExample.parsed.kind !== 'division') {
+            return parsedExample;
+        }
+
+        return {
+            ...parsedExample,
+            parsed: {
+                ...parsedExample.parsed,
+                answerWidth: maxAnswerWidth,
+                height: maxHeight,
+                width: parsedExample.parsed.dividendTokens.length + 1 + maxAnswerWidth
+            }
+        };
+    });
+}
+
+function parseNotebookExample(example) {
+    if (example.type === 'division') {
+        return parseDivisionExample(example);
+    }
+
+    return {
+        kind: 'vertical',
+        ...parseVerticalNumbers(example)
+    };
+}
+
+function getMultiplicationSolutionRows(example) {
+    const multiplierDigits = Math.max(1, getDigitCount(example.numbers[1]));
+
+    return multiplierDigits === 1
+        ? 1
+        : multiplierDigits + 1;
+}
+
+function getContentHeight(parsedExample) {
+    const { example, parsed } = parsedExample;
+
+    if (parsed.kind === 'division') {
+        return parsed.height;
+    }
+
+    if (example.type === 'multiplication') {
+        return parsed.height + getMultiplicationSolutionRows(example);
+    }
+
+    return parsed.height;
+}
+
+function getAdvanceHeight(parsedExample, layout) {
+    const gapRows = parsedExample.example.type === 'multiplication'
+        || parsedExample.example.type === 'division'
+        ? 1
+        : layout.gapRows;
+
+    return getContentHeight(parsedExample) + gapRows;
+}
+
 function buildExampleRows(parsedExamples, page, layout) {
     const rows = [];
     let currentRow = [];
@@ -94,7 +190,8 @@ function buildExampleRows(parsedExamples, page, layout) {
             rows.push({
                 examples: currentRow,
                 width: currentMinWidth,
-                height: Math.max(...currentRow.map(({ parsed }) => parsed.height))
+                height: Math.max(...currentRow.map((example) => getContentHeight(example))),
+                advanceHeight: Math.max(...currentRow.map((example) => getAdvanceHeight(example, layout)))
             });
             currentRow = [];
             currentMinWidth = 0;
@@ -113,7 +210,8 @@ function buildExampleRows(parsedExamples, page, layout) {
         rows.push({
             examples: currentRow,
             width: currentMinWidth,
-            height: Math.max(...currentRow.map(({ parsed }) => parsed.height))
+            height: Math.max(...currentRow.map((example) => getContentHeight(example))),
+            advanceHeight: Math.max(...currentRow.map((example) => getAdvanceHeight(example, layout)))
         });
     }
 
@@ -144,11 +242,15 @@ function getDistributedRowStartCols(row, page, layout) {
     const totalSlotWidth = row.examples.reduce((total, example) => total + example.slotWidth, 0);
     const gapCount = row.examples.length - 1;
     const availableGapWidth = page.cols - layout.sidePaddingCols * 2 - totalSlotWidth;
+    const distributedGapWidth = Math.min(
+        availableGapWidth,
+        layout.maxGapColsBetweenExamples * gapCount
+    );
     const baseGapWidth = Math.max(
         layout.minGapColsBetweenExamples,
-        Math.floor(availableGapWidth / gapCount)
+        Math.floor(distributedGapWidth / gapCount)
     );
-    let extraGapCols = availableGapWidth - baseGapWidth * gapCount;
+    let extraGapCols = distributedGapWidth - baseGapWidth * gapCount;
     let nextStartCol = layout.sidePaddingCols;
 
     return row.examples.map((example, index) => {
@@ -180,22 +282,26 @@ export function buildNotebookPlacement(items, operator, options = {}) {
         };
     }
 
-    const parsedExamples = examples.map(({ example, index }) => ({
+    const parsedExamples = normalizeDivisionWidths(examples.map(({ example, index }) => ({
         example,
         index,
-        parsed: parseVerticalNumbers(example)
-    }));
+        parsed: parseNotebookExample(example)
+    })));
 
     const rows = buildExampleRows(parsedExamples, page, layout);
     const requiredRows = layout.topPaddingRows
-        + rows.reduce((total, row) => total + row.height, 0)
-        + Math.max(0, rows.length - 1) * layout.gapRows;
+        + rows.reduce((total, row, index) => (
+            total + row.height + (index < rows.length - 1 ? row.advanceHeight - row.height : 0)
+        ), 0);
     const cells = [];
     let currentRowStart = layout.topPaddingRows;
 
     rows.forEach((row, rowIndex) => {
         const isLastRow = rowIndex === rows.length - 1;
-        const rowStartCols = isLastRow
+        const isIncompleteLastRow = isLastRow
+            && rowIndex > 0
+            && row.examples.length < rows[rowIndex - 1].examples.length;
+        const rowStartCols = isIncompleteLastRow
             ? getLeftAlignedRowStartCols(row, layout)
             : getDistributedRowStartCols(row, page, layout);
 
@@ -203,6 +309,48 @@ export function buildNotebookPlacement(items, operator, options = {}) {
             const slotStartCol = rowStartCols[exampleIndex];
             const startCol = slotStartCol + Math.max(0, Math.floor((slotWidth - parsed.width) / 2));
             const startRow = currentRowStart;
+
+            if (parsed.kind === 'division') {
+                const verticalLineCol = startCol + parsed.dividendTokens.length;
+
+                parsed.dividendTokens.forEach((digit, digitIndex) => {
+                    cells.push({
+                        row: startRow,
+                        col: startCol + digitIndex,
+                        kind: 'digit',
+                        value: digit.value
+                    });
+                });
+
+                parsed.divisorTokens.forEach((digit, digitIndex) => {
+                    cells.push({
+                        row: startRow,
+                        col: verticalLineCol + 1 + digitIndex,
+                        kind: 'digit',
+                        value: digit.value
+                    });
+                });
+
+                for (let rowOffset = 0; rowOffset < parsed.height; rowOffset++) {
+                    cells.push({
+                        row: startRow + rowOffset,
+                        col: verticalLineCol,
+                        kind: 'vertical-line',
+                        value: ''
+                    });
+                }
+
+                for (let digitIndex = 0; digitIndex <= parsed.answerWidth; digitIndex++) {
+                    cells.push({
+                        row: startRow + 1,
+                        col: verticalLineCol + digitIndex,
+                        kind: 'line',
+                        value: ''
+                    });
+                }
+
+                return;
+            }
 
             parsed.alignedDigits.forEach((digits, rowIndex) => {
                 if (rowIndex > 0) {
@@ -239,7 +387,7 @@ export function buildNotebookPlacement(items, operator, options = {}) {
             }
         });
 
-        currentRowStart += row.height + layout.gapRows;
+        currentRowStart += row.advanceHeight;
     });
     const requiredCols = cells.length > 0
         ? Math.max(...cells.map((cell) => cell.col)) + 1

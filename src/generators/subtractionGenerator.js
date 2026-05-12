@@ -1,13 +1,21 @@
-import { getRandomNumberByDigits } from './numberUtils';
+import { getRandomDecimalStringByDigits, getRandomNumberByDigits } from './numberUtils';
 
-export function generateSubtraction(count, minuendDigits, subtrahendDigits) {
+function getComparableValue(value) {
+    return Number(String(value).replace(',', '.'));
+}
+
+export function generateSubtraction(count, minuendDigits, subtrahendDigits, useDecimals = false) {
     const examples = [];
 
     for (let i = 0; i < count; i++) {
-        let minuend = getRandomNumberByDigits(minuendDigits);
-        let subtrahend = getRandomNumberByDigits(subtrahendDigits);
+        let minuend = useDecimals
+            ? getRandomDecimalStringByDigits(minuendDigits)
+            : getRandomNumberByDigits(minuendDigits);
+        let subtrahend = useDecimals
+            ? getRandomDecimalStringByDigits(subtrahendDigits)
+            : getRandomNumberByDigits(subtrahendDigits);
 
-        if (subtrahend > minuend) {
+        if (getComparableValue(subtrahend) > getComparableValue(minuend)) {
             [minuend, subtrahend] = [subtrahend, minuend];
         }
 

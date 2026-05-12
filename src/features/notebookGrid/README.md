@@ -1,6 +1,6 @@
 # Notebook Grid Feature
 
-This feature renders printable notebook-style grids for addition, subtraction, and multiplication.
+This feature renders printable notebook-style grids for addition, subtraction, multiplication, and division.
 
 ## Core Rule
 
@@ -24,7 +24,7 @@ The CSS print rule uses `@page { margin: 0; size: A4; }`. Printer hardware may s
 
 `placement.js` owns all example positioning.
 
-Examples are packed left to right by their actual cell width inside a content area with `2` empty cells of padding on the left and right page edges. Neighboring examples keep at least `2` empty cells between them. If the next example would exceed the content area with that minimum gap, placement moves it to the next row band and keeps the digits aligned inside that new band. Remaining horizontal space is distributed across gaps in non-final rows so they do not leave a large unused area on the right. The final row is left-aligned with the minimum gap instead of being centered or stretched.
+Examples are packed left to right by their actual cell width inside a content area with `2` empty cells of padding on the left and right page edges. Neighboring examples keep at least `2` empty cells between them and distributed rows cap that gap at `3` cells. If the next example would exceed the content area with the minimum gap, placement moves it to the next row band and keeps the digits aligned inside that new band. Remaining horizontal space is distributed across gaps in non-final rows up to that cap. The final row is left-aligned with the minimum gap instead of being centered or stretched.
 
 Input:
 
@@ -56,8 +56,13 @@ Cell kinds:
 - `digit`: a single digit.
 - `operator`: `+`, `−`, or `×`.
 - `line`: one cell segment of the answer line.
+- `vertical-line`: one cell segment of a long-division separator.
 
 The answer line belongs on the top edge of its row.
+
+Multiplication examples reserve blank rows below the visible answer line for student work. A one-digit multiplier reserves one answer row. Multi-digit multipliers reserve one row per multiplier digit plus one final result row, then one extra blank row before the next example band.
+
+Division examples render a long-division corner on the shared grid. The dividend is placed left of a vertical separator, the divisor is placed to the right, and a horizontal answer line marks the blank quotient area. Placement reserves rows for student work from the quotient digit count, then one extra blank row before the next example band.
 
 ## Rendering
 

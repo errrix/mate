@@ -53,11 +53,27 @@ describe('generateSubtraction', () => {
             expect(example.numbers[0] - example.numbers[1]).toBeGreaterThanOrEqual(0);
         }
     });
+
+    test('creates decimal subtraction examples when requested', () => {
+        const examples = generateSubtraction(20, 2, 2, true);
+
+        expect(examples).toHaveLength(20);
+        for (const example of examples) {
+            expect(example.type).toBe('subtraction');
+            expect(example.operator).toBe('-');
+            expect(example.numbers).toHaveLength(2);
+            example.numbers.forEach((number) => {
+                expect(number).toMatch(/^\d{2},\d{2}$/);
+            });
+            expect(Number(example.numbers[0].replace(',', '.')) - Number(example.numbers[1].replace(',', '.')))
+                .toBeGreaterThanOrEqual(0);
+        }
+    });
 });
 
 describe('generateMultiplication', () => {
     test('creates multiplication examples within requested digit ranges', () => {
-        const examples = generateMultiplication(15, 2, 1, 0);
+        const examples = generateMultiplication(15, 2, 1);
 
         expect(examples).toHaveLength(15);
         for (const example of examples) {
@@ -67,19 +83,6 @@ describe('generateMultiplication', () => {
             expectDigits(example.numbers[0], 2);
             expectDigits(example.numbers[1], 1);
         }
-    });
-
-    test('respects maxResult when the selected ranges make it feasible', () => {
-        const examples = generateMultiplication(20, 2, 1, 500);
-
-        expect(examples).toHaveLength(20);
-        for (const example of examples) {
-            expect(example.numbers[0] * example.numbers[1]).toBeLessThanOrEqual(500);
-        }
-    });
-
-    test('throws when maxResult cannot be reached with the selected ranges', () => {
-        expect(() => generateMultiplication(1, 3, 3, 100)).toThrow(RangeError);
     });
 });
 

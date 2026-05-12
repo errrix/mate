@@ -65,6 +65,7 @@
 .print-page {
     --notebook-cell-size: 7mm;
     --notebook-grid-line: #b8b8b8;
+    --notebook-ink-line-width: 0.22mm;
     --notebook-text: #222;
     width: 210mm;
     height: 294mm;
@@ -140,7 +141,14 @@
 .notebook-overlay-line {
     align-self: start;
     height: 0;
-    border-top: 0.22mm solid #222;
+    border-top: var(--notebook-ink-line-width) solid #222;
+}
+
+.notebook-overlay-vertical-line {
+    justify-self: start;
+    width: 0;
+    height: 100%;
+    border-left: var(--notebook-ink-line-width) solid #222;
 }
 
 .examples-container {

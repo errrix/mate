@@ -131,4 +131,95 @@ describe('notebook placement', () => {
         expect(placement.overflow).toBe(true);
         expect(placement.requiredRows).toBeGreaterThan(placement.page.rows);
     });
+
+    test('reserves solution rows for multi-digit multiplication', () => {
+        const examples = Array.from({ length: 4 }, (_, index) => ({
+            example: { numbers: [123, 456], type: 'multiplication' },
+            index
+        }));
+
+        const placement = buildNotebookPlacement(examples, '×');
+        const firstRowOperatorCols = placement.cells
+            .filter((cell) => cell.kind === 'operator' && cell.row === 2)
+            .map((cell) => cell.col);
+        const secondRowOperator = placement.cells
+            .find((cell) => cell.kind === 'operator' && cell.row > 2);
+        const lineRows = placement.cells
+            .filter((cell) => cell.kind === 'line')
+            .reduce((rows, cell) => rows.add(cell.row), new Set());
+
+        expect(firstRowOperatorCols).toEqual([3, 12, 21]);
+        expect([...lineRows]).toEqual([3, 11]);
+        expect(secondRowOperator).toMatchObject({ row: 10, col: 3 });
+        expect(placement.requiredRows).toBe(16);
+    });
+
+    test('places division corner on the shared grid and reserves work rows', () => {
+        const placement = buildNotebookPlacement(
+            [
+                { example: { dividend: 864, divisor: 12, type: 'division' }, index: 0 },
+                { example: { dividend: 735, divisor: 7, type: 'division' }, index: 1 }
+            ],
+            '÷'
+        );
+        const digitCells = placement.cells.filter((cell) => cell.kind === 'digit');
+        const verticalLineCells = placement.cells.filter((cell) => cell.kind === 'vertical-line');
+        const horizontalLineCells = placement.cells.filter((cell) => cell.kind === 'line');
+
+        expect(digitCells.map((cell) => cell.value)).toEqual([
+            '8', '6', '4', '1', '2',
+            '7', '3', '5', '7'
+        ]);
+        expect(verticalLineCells.filter((cell) => cell.col === 5).map((cell) => cell.row))
+            .toEqual([1, 2, 3, 4, 5, 6, 7]);
+        expect(horizontalLineCells
+            .filter((cell) => cell.row === 2 && cell.col < 10)
+            .map((cell) => cell.col))
+            .toEqual([5, 6, 7, 8]);
+        expect(placement.requiredRows).toBe(8);
+        expect(placement.overflow).toBe(false);
+    });
+
+    test('keeps division columns aligned across rows with different quotient widths', () => {
+        const placement = buildNotebookPlacement(
+            [
+                { example: { dividend: 208, divisor: 8, type: 'division' }, index: 0 },
+                { example: { dividend: 525, divisor: 7, type: 'division' }, index: 1 },
+                { example: { dividend: 492, divisor: 4, type: 'division' }, index: 2 },
+                { example: { dividend: 234, divisor: 6, type: 'division' }, index: 3 },
+                { example: { dividend: 776, divisor: 4, type: 'division' }, index: 4 },
+                { example: { dividend: 760, divisor: 8, type: 'division' }, index: 5 }
+            ],
+            '÷'
+        );
+        const verticalLineColsByRow = placement.cells
+            .filter((cell) => cell.kind === 'vertical-line')
+            .reduce((rows, cell) => {
+                rows[cell.row] = rows[cell.row] ?? new Set();
+                rows[cell.row].add(cell.col);
+                return rows;
+            }, {});
+
+        expect([...verticalLineColsByRow[1]]).toEqual([5, 15, 24]);
+        expect([...verticalLineColsByRow[9]]).toEqual([5, 15, 24]);
+    });
+
+    test('keeps division vertical lines the same height for different quotient widths', () => {
+        const placement = buildNotebookPlacement(
+            [
+                { example: { dividend: 616, divisor: 8, type: 'division' }, index: 0 },
+                { example: { dividend: 891, divisor: 9, type: 'division' }, index: 1 },
+                { example: { dividend: 925, divisor: 5, type: 'division' }, index: 2 }
+            ],
+            '÷'
+        );
+        const lineHeights = placement.cells
+            .filter((cell) => cell.kind === 'vertical-line')
+            .reduce((heights, cell) => ({
+                ...heights,
+                [cell.col]: (heights[cell.col] ?? 0) + 1
+            }), {});
+
+        expect(Object.values(lineHeights)).toEqual([7, 7, 7]);
+    });
 });

@@ -23,7 +23,8 @@ export function generateExamplesFromSettings(settings) {
         generatedExamples.push(...generateSubtraction(
             settings.subtraction.count,
             settings.subtraction.minuendDigits,
-            settings.subtraction.subtrahendDigits
+            settings.subtraction.subtrahendDigits,
+            settings.subtraction.useDecimals
         ));
     }
 
@@ -31,8 +32,7 @@ export function generateExamplesFromSettings(settings) {
         generatedExamples.push(...generateMultiplication(
             settings.multiplication.count,
             settings.multiplication.firstDigits,
-            settings.multiplication.secondDigits,
-            settings.multiplication.maxResult
+            settings.multiplication.secondDigits
         ));
     }
 

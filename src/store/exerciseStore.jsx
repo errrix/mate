@@ -15,14 +15,14 @@ export const DEFAULT_SETTINGS = {
         enabled: false,
         count: 10,
         minuendDigits: 2,
-        subtrahendDigits: 2
+        subtrahendDigits: 2,
+        useDecimals: false
     },
     multiplication: {
         enabled: false,
         count: 10,
         firstDigits: 2,
-        secondDigits: 2,
-        maxResult: 1000
+        secondDigits: 2
     },
     division: {
         enabled: false,

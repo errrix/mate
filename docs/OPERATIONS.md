@@ -40,6 +40,7 @@ Settings:
 - `count`: number of examples.
 - `minuendDigits`: digit count for the minuend.
 - `subtrahendDigits`: digit count for the subtrahend.
+- `useDecimals`: when enabled, minuend and subtrahend are generated as decimal strings with a comma separator.
 
 UI constraint:
 
@@ -51,6 +52,7 @@ Generator behavior:
 
 - The generator still guarantees non-negative subtraction examples.
 - If randomly generated values would produce a negative result, it swaps the values.
+- Decimal subtraction uses the same comma-separated display format as decimal addition.
 
 ## Multiplication
 
@@ -61,22 +63,27 @@ Settings:
 - `count`: number of examples.
 - `firstDigits`: digit count for the first factor.
 - `secondDigits`: digit count for the second factor.
-- `maxResult`: optional product ceiling. `0` means no ceiling.
+
+UI constraint:
+
+- The second factor digit selector must disable options greater than `firstDigits`.
+- If `firstDigits` is lowered below the current `secondDigits`, clamp `secondDigits` to the new `firstDigits`.
+- Do not show an error for this case; impossible choices should be unavailable.
 
 Generator behavior:
 
-- `maxResult` is enforced when non-zero.
-- If the chosen digit ranges cannot produce any valid product within `maxResult`, the generator throws `RangeError`.
+- The generator creates factors within the selected digit ranges.
 
 Grid behavior:
 
 - Multiplication currently uses the same vertical two-number placement model as addition/subtraction.
 - It renders the `×` operator and answer line.
 - It does not yet render intermediate multiplication rows.
+- Placement reserves blank rows for intermediate multiplication work so the next example does not overlap the student's solution.
 
 ## Division
 
-Division examples still use the operation-specific `DivisionExample` component.
+Division examples use the notebook grid through `NotebookGrid`.
 
 Settings:
 
@@ -90,6 +97,12 @@ Generator behavior:
 - The generator computes a feasible quotient range for the selected divisor.
 - It should avoid retry loops for normal valid ranges.
 - It throws `RangeError` for impossible digit combinations.
+
+Grid behavior:
+
+- Division renders a long-division corner with the dividend on the left and the divisor on the right.
+- The quotient is not printed; the grid leaves space under the horizontal answer line.
+- Placement reserves work rows based on quotient digit count and one extra blank row before the next example band.
 
 ## Test Expectations
 
