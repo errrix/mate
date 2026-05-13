@@ -29,6 +29,9 @@ export const DEFAULT_SETTINGS = {
         count: 10,
         dividendDigits: 3,
         divisorDigits: 1
+    },
+    options: {
+        printAnswers: false
     }
 };
 

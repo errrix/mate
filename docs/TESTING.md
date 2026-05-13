@@ -32,7 +32,10 @@ The current visual tests render dev-only routes:
 ```text
 /__visual-tests/notebook-grid/small-horizontal
 /__visual-tests/notebook-grid/vertical-arithmetic
+/__visual-tests/notebook-grid/paginated-addition
 ```
+
+The notebook grid visual fixtures enable printed answers so snapshots cover example numbers, the answer cut line, answer lists, and multi-page output.
 
 These routes are available only in Vite dev mode through `import.meta.env.DEV`; they are not included as normal production routes.
 

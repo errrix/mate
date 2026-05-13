@@ -3,6 +3,7 @@ import { DEFAULT_PAGE_MODEL } from './pageModel';
 export const DEFAULT_NOTEBOOK_LAYOUT = {
     gapRows: 3,
     topPaddingRows: 1,
+    answerRows: 9,
     minColsPerExample: 6,
     minGapColsBetweenExamples: 2,
     maxGapColsBetweenExamples: 3,
@@ -85,6 +86,38 @@ function getNumberTokens(value) {
 
 function getDigitCount(value) {
     return String(value).replace(/\D/g, '').length;
+}
+
+function getNumericValue(value) {
+    return Number(String(value).replace(',', '.'));
+}
+
+function formatAnswer(value) {
+    const roundedValue = Math.round((value + Number.EPSILON) * 100) / 100;
+
+    return Number.isInteger(roundedValue)
+        ? String(roundedValue)
+        : String(roundedValue).replace('.', ',');
+}
+
+function getExampleAnswer(example) {
+    if (example.type === 'addition') {
+        return formatAnswer(example.numbers.reduce((total, number) => total + getNumericValue(number), 0));
+    }
+
+    if (example.type === 'subtraction') {
+        return formatAnswer(getNumericValue(example.numbers[0]) - getNumericValue(example.numbers[1]));
+    }
+
+    if (example.type === 'multiplication') {
+        return formatAnswer(getNumericValue(example.numbers[0]) * getNumericValue(example.numbers[1]));
+    }
+
+    if (example.type === 'division') {
+        return formatAnswer(getNumericValue(example.dividend) / getNumericValue(example.divisor));
+    }
+
+    return '';
 }
 
 function isIntegerLike(value) {
@@ -319,9 +352,172 @@ function getDistributedRowStartCols(row, page, layout) {
     });
 }
 
+function appendDivisionCells(cells, parsed, startRow, startCol) {
+    const verticalLineCol = startCol + parsed.dividendTokens.length;
+
+    parsed.dividendTokens.forEach((digit, digitIndex) => {
+        cells.push({
+            row: startRow,
+            col: startCol + digitIndex,
+            kind: 'digit',
+            value: digit.value
+        });
+    });
+
+    parsed.divisorTokens.forEach((digit, digitIndex) => {
+        cells.push({
+            row: startRow,
+            col: verticalLineCol + 1 + digitIndex,
+            kind: 'digit',
+            value: digit.value
+        });
+    });
+
+    for (let rowOffset = 0; rowOffset < parsed.height; rowOffset++) {
+        cells.push({
+            row: startRow + rowOffset,
+            col: verticalLineCol,
+            kind: 'vertical-line',
+            value: ''
+        });
+    }
+
+    for (let digitIndex = 0; digitIndex <= parsed.answerWidth; digitIndex++) {
+        cells.push({
+            row: startRow + 1,
+            col: verticalLineCol + digitIndex,
+            kind: 'line',
+            value: ''
+        });
+    }
+}
+
+function appendHorizontalCells(cells, parsed, startRow, startCol) {
+    parsed.tokens.forEach((token, tokenIndex) => {
+        cells.push({
+            row: startRow,
+            col: startCol + tokenIndex,
+            kind: token.kind,
+            value: token.value
+        });
+    });
+}
+
+function appendVerticalCells(cells, parsed, operator, startRow, startCol) {
+    parsed.alignedDigits.forEach((digits, rowIndex) => {
+        if (rowIndex > 0) {
+            cells.push({
+                row: startRow + rowIndex,
+                col: startCol,
+                kind: 'operator',
+                value: operator
+            });
+        }
+
+        digits.forEach((digit, digitIndex) => {
+            if (digit === null) {
+                return;
+            }
+
+            cells.push({
+                row: startRow + rowIndex,
+                col: startCol + 1 + digitIndex,
+                kind: 'digit',
+                value: digit.value,
+                decimalSeparatorAfter: digit.decimalSeparatorAfter === true
+            });
+        });
+    });
+
+    for (let digitIndex = 0; digitIndex < parsed.maxLength; digitIndex++) {
+        cells.push({
+            row: startRow + parsed.numbersCount,
+            col: startCol + 1 + digitIndex,
+            kind: 'line',
+            value: ''
+        });
+    }
+}
+
+function paginateRows(rows, page, layout, options) {
+    const pages = [];
+    let currentPageRows = [];
+    let currentRowStart = layout.topPaddingRows;
+    const usableRows = options.printAnswers
+        ? page.rows - layout.answerRows
+        : page.rows;
+
+    rows.forEach((row) => {
+        const rowWouldOverflow = currentPageRows.length > 0
+            && currentRowStart + row.height > usableRows;
+
+        if (rowWouldOverflow) {
+            pages.push(currentPageRows);
+            currentPageRows = [];
+            currentRowStart = layout.topPaddingRows;
+        }
+
+        currentPageRows.push(row);
+        currentRowStart += row.advanceHeight;
+    });
+
+    if (currentPageRows.length > 0) {
+        pages.push(currentPageRows);
+    }
+
+    return pages;
+}
+
+function renderPageRows(pageRows, page, layout, operator) {
+    const cells = [];
+    let currentRowStart = layout.topPaddingRows;
+
+    pageRows.forEach((row, rowIndex) => {
+        const isLastRow = rowIndex === pageRows.length - 1;
+        const isIncompleteLastRow = isLastRow
+            && rowIndex > 0
+            && row.examples.length < pageRows[rowIndex - 1].examples.length;
+        const rowStartCols = isIncompleteLastRow
+            ? getLeftAlignedRowStartCols(row, layout)
+            : getDistributedRowStartCols(row, page, layout);
+
+        row.examples.forEach(({ parsed, slotWidth, index }, exampleIndex) => {
+            const slotStartCol = rowStartCols[exampleIndex];
+            const startCol = slotStartCol + Math.max(0, Math.floor((slotWidth - parsed.width) / 2));
+            const startRow = currentRowStart;
+
+            cells.push({
+                row: startRow,
+                col: Math.max(0, startCol - 1),
+                kind: 'example-number',
+                value: `${index + 1}.`
+            });
+
+            if (parsed.kind === 'division') {
+                appendDivisionCells(cells, parsed, startRow, startCol);
+                return;
+            }
+
+            if (parsed.kind === 'horizontal') {
+                appendHorizontalCells(cells, parsed, startRow, startCol);
+                return;
+            }
+
+            appendVerticalCells(cells, parsed, operator, startRow, startCol);
+        });
+
+        currentRowStart += row.advanceHeight;
+    });
+
+    return cells;
+}
+
 export function buildNotebookPlacement(items, operator, options = {}) {
     const page = options.page ?? DEFAULT_PAGE_MODEL;
     const layout = { ...DEFAULT_NOTEBOOK_LAYOUT, ...options.layout };
+    const placementOptions = {
+        printAnswers: options.printAnswers === true
+    };
     const examples = items.map((item, index) => ({
         example: item.example ?? item,
         index: item.index ?? index
@@ -331,6 +527,11 @@ export function buildNotebookPlacement(items, operator, options = {}) {
         return {
             page,
             layout,
+            pages: [{
+                number: 1,
+                cells: []
+            }],
+            answers: [],
             cells: [],
             overflow: false,
             requiredRows: layout.topPaddingRows,
@@ -345,128 +546,43 @@ export function buildNotebookPlacement(items, operator, options = {}) {
     })));
 
     const rows = buildExampleRows(parsedExamples, page, layout);
-    const requiredRows = layout.topPaddingRows
-        + rows.reduce((total, row, index) => (
-            total + row.height + (index < rows.length - 1 ? row.advanceHeight - row.height : 0)
-        ), 0);
-    const cells = [];
-    let currentRowStart = layout.topPaddingRows;
-
-    rows.forEach((row, rowIndex) => {
-        const isLastRow = rowIndex === rows.length - 1;
-        const isIncompleteLastRow = isLastRow
-            && rowIndex > 0
-            && row.examples.length < rows[rowIndex - 1].examples.length;
-        const rowStartCols = isIncompleteLastRow
-            ? getLeftAlignedRowStartCols(row, layout)
-            : getDistributedRowStartCols(row, page, layout);
-
-        row.examples.forEach(({ parsed, slotWidth }, exampleIndex) => {
-            const slotStartCol = rowStartCols[exampleIndex];
-            const startCol = slotStartCol + Math.max(0, Math.floor((slotWidth - parsed.width) / 2));
-            const startRow = currentRowStart;
-
-            if (parsed.kind === 'division') {
-                const verticalLineCol = startCol + parsed.dividendTokens.length;
-
-                parsed.dividendTokens.forEach((digit, digitIndex) => {
-                    cells.push({
-                        row: startRow,
-                        col: startCol + digitIndex,
-                        kind: 'digit',
-                        value: digit.value
-                    });
-                });
-
-                parsed.divisorTokens.forEach((digit, digitIndex) => {
-                    cells.push({
-                        row: startRow,
-                        col: verticalLineCol + 1 + digitIndex,
-                        kind: 'digit',
-                        value: digit.value
-                    });
-                });
-
-                for (let rowOffset = 0; rowOffset < parsed.height; rowOffset++) {
-                    cells.push({
-                        row: startRow + rowOffset,
-                        col: verticalLineCol,
-                        kind: 'vertical-line',
-                        value: ''
-                    });
-                }
-
-                for (let digitIndex = 0; digitIndex <= parsed.answerWidth; digitIndex++) {
-                    cells.push({
-                        row: startRow + 1,
-                        col: verticalLineCol + digitIndex,
-                        kind: 'line',
-                        value: ''
-                    });
-                }
-
-                return;
-            }
-
-            if (parsed.kind === 'horizontal') {
-                parsed.tokens.forEach((token, tokenIndex) => {
-                    cells.push({
-                        row: startRow,
-                        col: startCol + tokenIndex,
-                        kind: token.kind,
-                        value: token.value
-                    });
-                });
-
-                return;
-            }
-
-            parsed.alignedDigits.forEach((digits, rowIndex) => {
-                if (rowIndex > 0) {
-                    cells.push({
-                        row: startRow + rowIndex,
-                        col: startCol,
-                        kind: 'operator',
-                        value: operator
-                    });
-                }
-
-                digits.forEach((digit, digitIndex) => {
-                    if (digit === null) {
-                        return;
-                    }
-
-                    cells.push({
-                        row: startRow + rowIndex,
-                        col: startCol + 1 + digitIndex,
-                        kind: 'digit',
-                        value: digit.value,
-                        decimalSeparatorAfter: digit.decimalSeparatorAfter === true
-                    });
-                });
-            });
-
-            for (let digitIndex = 0; digitIndex < parsed.maxLength; digitIndex++) {
-                cells.push({
-                    row: startRow + parsed.numbersCount,
-                    col: startCol + 1 + digitIndex,
-                    kind: 'line',
-                    value: ''
-                });
-            }
-        });
-
-        currentRowStart += row.advanceHeight;
-    });
+    const pageRows = paginateRows(rows, page, layout, placementOptions);
+    const answers = placementOptions.printAnswers
+        ? examples.map(({ example, index }) => ({
+            number: index + 1,
+            value: getExampleAnswer(example)
+        }))
+        : [];
+    const pages = pageRows.map((rowsForPage, index) => ({
+        number: index + 1,
+        cells: renderPageRows(rowsForPage, page, layout, operator),
+        answers: index === pageRows.length - 1 ? answers : []
+    }));
+    const cells = pages.flatMap((placementPage) => placementPage.cells);
+    const requiredRows = pageRows.length === 0
+        ? layout.topPaddingRows
+        : Math.max(...pageRows.map((rowsForPage) => (
+            layout.topPaddingRows
+            + rowsForPage.reduce((total, row, index) => (
+                total + row.height + (index < rowsForPage.length - 1 ? row.advanceHeight - row.height : 0)
+            ), 0)
+        )));
     const requiredCols = cells.length > 0
         ? Math.max(...cells.map((cell) => cell.col)) + 1
         : page.cols;
+    const usableRows = placementOptions.printAnswers
+        ? page.rows - layout.answerRows
+        : page.rows;
+    const rowTooTall = rows.some((row) => layout.topPaddingRows + row.height > usableRows);
 
     return {
         page,
         layout,
+        options: placementOptions,
+        pages,
+        answers,
         cells,
-        overflow: requiredRows > page.rows || requiredCols > page.cols,
+        overflow: rowTooTall || requiredCols > page.cols,
         requiredRows,
         requiredCols
     };

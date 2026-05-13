@@ -330,7 +330,26 @@
 }
 
 .settings-summary span {
+    display: block;
     font-size: 0.88rem;
+}
+
+.settings-print-answers {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.settings-print-answers input {
+    width: 16px;
+    height: 16px;
+    accent-color: #22a95a;
 }
 
 .settings-screen button {

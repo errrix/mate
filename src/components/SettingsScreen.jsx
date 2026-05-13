@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { DEFAULT_SETTINGS, useExerciseStore } from '../store/exerciseStore';
+import { generateExamplesFromSettings } from '../generators/generateExamplesFromSettings';
+import { buildNotebookPlacement } from '../features/notebookGrid/placement';
 import './SettingsScreen.css';
 
 const AGE_HINTS = {
@@ -16,20 +18,56 @@ const cloneDefaultSettings = () => ({
     addition: { ...DEFAULT_SETTINGS.addition },
     subtraction: { ...DEFAULT_SETTINGS.subtraction },
     multiplication: { ...DEFAULT_SETTINGS.multiplication },
-    division: { ...DEFAULT_SETTINGS.division }
+    division: { ...DEFAULT_SETTINGS.division },
+    options: { ...DEFAULT_SETTINGS.options }
 });
+
+function groupExamples(examples) {
+    return examples.reduce((acc, example, index) => {
+        if (!acc[example.type]) {
+            acc[example.type] = [];
+        }
+        acc[example.type].push({ example, index });
+        return acc;
+    }, {});
+}
+
+function getOperatorByType(type) {
+    return {
+        addition: '+',
+        subtraction: '−',
+        multiplication: '×',
+        division: '÷'
+    }[type];
+}
 
 export function SettingsScreen({ onGenerate }) {
     const { settings, setSettings } = useExerciseStore();
     const [selectedAge, setSelectedAge] = useState(6);
 
     const summary = useMemo(() => {
-        const enabledOperations = Object.values(settings).filter(operation => operation.enabled);
+        const enabledOperations = ['addition', 'subtraction', 'multiplication', 'division']
+            .map((operation) => settings[operation])
+            .filter(operation => operation.enabled);
         const examplesCount = enabledOperations.reduce((total, operation) => total + Number(operation.count || 0), 0);
+        let pagesCount = 0;
+
+        try {
+            const examples = generateExamplesFromSettings(settings);
+            const groupedExamples = groupExamples(examples);
+            pagesCount = Object.entries(groupedExamples).reduce((total, [type, items]) => (
+                total + buildNotebookPlacement(items, getOperatorByType(type), {
+                    printAnswers: settings.options?.printAnswers === true
+                }).pages.length
+            ), 0);
+        } catch {
+            pagesCount = 0;
+        }
 
         return {
             operationsCount: enabledOperations.length,
-            examplesCount
+            examplesCount,
+            pagesCount
         };
     }, [settings]);
 
@@ -61,6 +99,16 @@ export function SettingsScreen({ onGenerate }) {
                     && prev.multiplication.secondDigits > parsedValue
                     ? { secondDigits: parsedValue }
                     : {})
+            }
+        }));
+    };
+
+    const handleOptionChange = (field, value) => {
+        setSettings(prev => ({
+            ...prev,
+            options: {
+                ...prev.options,
+                [field]: value
             }
         }));
     };
@@ -314,7 +362,16 @@ export function SettingsScreen({ onGenerate }) {
                 </button>
                 <div className="settings-summary" aria-live="polite">
                     <p>Будет создано: <strong>{summary.examplesCount}</strong> примеров</p>
+                    <span>Листов: {summary.pagesCount}</span>
                     <span>Выбрано операций: {summary.operationsCount}</span>
+                    <label className="settings-print-answers">
+                        <input
+                            type="checkbox"
+                            checked={settings.options?.printAnswers === true}
+                            onChange={(event) => handleOptionChange('printAnswers', event.target.checked)}
+                        />
+                        <span>Печатать ответы</span>
+                    </label>
                 </div>
                 <button type="button" className="btn-primary" onClick={handleGenerate}>
                     Создать примеры

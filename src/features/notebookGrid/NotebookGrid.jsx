@@ -5,16 +5,17 @@ import { CssNotebookGrid } from './renderers/CssNotebookGrid';
 export function NotebookGrid({
     items,
     operator,
-    title
+    title,
+    printAnswers = false
 }) {
-    const placement = buildNotebookPlacement(items, operator);
+    const placement = buildNotebookPlacement(items, operator, { printAnswers });
 
     return (
         <div className="notebook-section">
             <h2 className="notebook-title">{title}</h2>
             {placement.overflow && (
                 <div className="notebook-warning">
-                    Примеры не помещаются на один лист A4. Уменьшите количество примеров.
+                    Примеры слишком крупные для печатной сетки A4. Уменьшите параметры задания.
                 </div>
             )}
             <CssNotebookGrid placement={placement} />

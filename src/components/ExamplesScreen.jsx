@@ -17,6 +17,7 @@ function groupExamples(examples) {
 
 export function ExamplesScreen({ onBack }) {
     const { settings } = useExerciseStore();
+    const printAnswers = settings.options?.printAnswers === true;
     const { examples, error } = useMemo(() => {
         try {
             return {
@@ -67,6 +68,7 @@ export function ExamplesScreen({ onBack }) {
                             title="Сложение"
                             items={items}
                             operator="+"
+                            printAnswers={printAnswers}
                         />
                     );
                 }
@@ -78,6 +80,7 @@ export function ExamplesScreen({ onBack }) {
                             title="Вычитание"
                             items={items}
                             operator="−"
+                            printAnswers={printAnswers}
                         />
                     );
                 }
@@ -89,6 +92,7 @@ export function ExamplesScreen({ onBack }) {
                             title="Умножение"
                             items={items}
                             operator="×"
+                            printAnswers={printAnswers}
                         />
                     );
                 }
@@ -100,6 +104,7 @@ export function ExamplesScreen({ onBack }) {
                             title="Деление"
                             items={items}
                             operator="÷"
+                            printAnswers={printAnswers}
                         />
                     );
                 }

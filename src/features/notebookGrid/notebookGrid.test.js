@@ -3,15 +3,18 @@ import { createPageModel } from './pageModel';
 import { buildNotebookPlacement, parseVerticalNumbers } from './placement';
 
 describe('page model', () => {
-    test('creates a full-page A4 print grid with 7mm cells', () => {
+    test('creates an A4 print grid with reserved header and footer space', () => {
         const page = createPageModel();
 
         expect(page.pageWidthMm).toBe(210);
         expect(page.pageHeightMm).toBe(297);
         expect(page.marginMm).toBe(0);
+        expect(page.headerHeightMm).toBe(24);
+        expect(page.footerHeightMm).toBe(14);
+        expect(page.contentHeightMm).toBe(259);
         expect(page.cellSizeMm).toBe(7);
         expect(page.cols).toBe(30);
-        expect(page.rows).toBe(42);
+        expect(page.rows).toBe(37);
     });
 });
 
@@ -72,12 +75,32 @@ describe('notebook placement', () => {
             .map((cell) => ({ row: cell.row, col: cell.col, kind: cell.kind, value: cell.value }));
 
         expect(contentCells).toEqual([
+            { row: 1, col: 12, kind: 'example-number', value: '1.' },
             { row: 1, col: 13, kind: 'digit', value: '4' },
             { row: 1, col: 14, kind: 'operator', value: '+' },
             { row: 1, col: 15, kind: 'digit', value: '7' },
             { row: 1, col: 16, kind: 'operator', value: '=' }
         ]);
         expect(placement.cells.filter((cell) => cell.kind === 'answer-line')).toHaveLength(0);
+    });
+
+    test('adds answers to the last page when requested', () => {
+        const placement = buildNotebookPlacement(
+            [
+                { example: { numbers: [4, 7], type: 'addition' }, index: 0 },
+                { example: { numbers: [12, 7], type: 'subtraction' }, index: 1 },
+                { example: { numbers: [6, 8], type: 'multiplication' }, index: 2 }
+            ],
+            '+',
+            { printAnswers: true }
+        );
+
+        expect(placement.answers).toEqual([
+            { number: 1, value: '11' },
+            { number: 2, value: '5' },
+            { number: 3, value: '48' }
+        ]);
+        expect(placement.pages[0].answers).toEqual(placement.answers);
     });
 
     test('places mixed one- and two-digit subtraction in a single row', () => {
@@ -191,7 +214,7 @@ describe('notebook placement', () => {
         expect(placement.overflow).toBe(false);
     });
 
-    test('reports overflow instead of scaling when content exceeds one page', () => {
+    test('paginates when content exceeds one page', () => {
         const examples = Array.from({ length: 80 }, (_, index) => ({
             example: { numbers: [123, 45], type: 'addition' },
             index
@@ -199,8 +222,11 @@ describe('notebook placement', () => {
 
         const placement = buildNotebookPlacement(examples, '+');
 
-        expect(placement.overflow).toBe(true);
-        expect(placement.requiredRows).toBeGreaterThan(placement.page.rows);
+        expect(placement.overflow).toBe(false);
+        expect(placement.pages.length).toBeGreaterThan(1);
+        expect(placement.pages.every((page) => (
+            Math.max(...page.cells.map((cell) => cell.row)) < placement.page.rows
+        ))).toBe(true);
     });
 
     test('reserves solution rows for multi-digit multiplication', () => {

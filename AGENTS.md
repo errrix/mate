@@ -62,12 +62,14 @@ npm.cmd run build
 Addition, subtraction, and multiplication use `src/features/notebookGrid`.
 
 - `pageModel.js` defines the physical A4 grid model.
-- `placement.js` converts examples into `{ row, col, kind, value }` cells.
+- `placement.js` converts examples into paginated `{ row, col, kind, value }` cells and owns example numbering/answer data.
 - `NotebookGrid.jsx` builds placement and renders the CSS grid.
 - `src/features/notebookGrid/README.md` documents print-specific constraints.
 - Current renderer: `css`, with explicit CSS line layers plus overlayed digits.
 
 Placement output must stay renderer-independent. If a print bug is caused by coordinates, fix `placement.js`; if coordinates are correct, fix the CSS renderer or print styles.
+
+When examples exceed one sheet, placement should create additional pages instead of scaling. When answer printing is enabled, reserve bottom rows for the dashed cut line and answer list on the last page.
 
 Decimal addition must align integer and fractional parts separately so commas stay in one column. Decimal comma rendering is intentionally handled as an overlay on the last integer digit cell.
 
