@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { HomePage } from './components/HomePage';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -8,6 +8,11 @@ import { SiteFooter } from './components/SiteFooter';
 import { SiteHeader } from './components/SiteHeader';
 import { hasEnabledOperation } from './generators/generateExamplesFromSettings';
 import './App.css';
+
+const NotebookGridVisualTestPage = import.meta.env.DEV
+    ? React.lazy(() => import('./features/notebookGrid/NotebookGridVisualTestPage')
+        .then((module) => ({ default: module.NotebookGridVisualTestPage })))
+    : null;
 
 function App() {
     const navigate = useNavigate();
@@ -30,6 +35,16 @@ function App() {
             <SiteHeader />
             <main className="app-main">
                 <Routes>
+                    {NotebookGridVisualTestPage && (
+                        <Route
+                            path="/__visual-tests/notebook-grid/:caseName"
+                            element={(
+                                <Suspense fallback={null}>
+                                    <NotebookGridVisualTestPage />
+                                </Suspense>
+                            )}
+                        />
+                    )}
                     <Route path="/" element={<HomePage />} />
                     <Route path="/generator" element={<SettingsScreen onGenerate={handleGenerate} />} />
                     <Route path="/result-list" element={<ExamplesScreen onBack={handleBack} />} />

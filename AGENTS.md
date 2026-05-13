@@ -16,7 +16,9 @@ This project is a Vite + React web app for generating printable math exercises i
 - Math generation logic: `src/generators/*Generator.js`
 - Shared generator utilities: `src/generators/numberUtils.js`
 - Operation-specific behavior notes: `docs/OPERATIONS.md`
+- Testing workflow: `docs/TESTING.md`
 - Tests: `src/**/*.test.js`
+- Visual tests: `e2e/**/*.spec.js` with committed Playwright snapshots in `e2e/*-snapshots/`
 - Styles: plain CSS imports, not CSS Modules
 
 ## Commands
@@ -26,14 +28,16 @@ Use `npm.cmd` on Windows PowerShell if `npm` is blocked by Execution Policy.
 ```bash
 npm.cmd install
 npm.cmd test
+npm.cmd run test:e2e
 npm.cmd run build
 npm.cmd run dev
 ```
 
-After code changes, run both:
+After code changes, run:
 
 ```bash
 npm.cmd test
+npm.cmd run test:e2e
 npm.cmd run build
 ```
 
@@ -49,7 +53,8 @@ npm.cmd run build
 - Do not add route-specific app shell widths unless a print/layout requirement makes it necessary.
 - Keep user input settings in the shared store and persisted to `localStorage`.
 - For generator changes, update or add Vitest coverage.
-- For print layout changes, check browser preview when practical and keep placement logic renderer-independent.
+- For print layout changes, update or add placement unit tests and Playwright visual coverage when the rendered sheet can regress. Check browser preview when practical and keep placement logic renderer-independent.
+- Do not update all Playwright snapshots casually. Prefer targeted updates with `npx.cmd playwright test -g "test name" --update-snapshots`; see `docs/TESTING.md`.
 - Do not duplicate random/range helpers inside generators; use `src/generators/numberUtils.js`.
 
 ## Print Grid Notes

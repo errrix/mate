@@ -62,6 +62,77 @@ describe('notebook placement', () => {
         expect(lineCells.every((cell) => cell.row === 3)).toBe(true);
     });
 
+    test('places one-digit addition in a single row without an answer line', () => {
+        const placement = buildNotebookPlacement(
+            [{ example: { numbers: [4, 7], type: 'addition' }, index: 0 }],
+            '+'
+        );
+
+        const contentCells = placement.cells
+            .map((cell) => ({ row: cell.row, col: cell.col, kind: cell.kind, value: cell.value }));
+
+        expect(contentCells).toEqual([
+            { row: 1, col: 13, kind: 'digit', value: '4' },
+            { row: 1, col: 14, kind: 'operator', value: '+' },
+            { row: 1, col: 15, kind: 'digit', value: '7' },
+            { row: 1, col: 16, kind: 'operator', value: '=' }
+        ]);
+        expect(placement.cells.filter((cell) => cell.kind === 'answer-line')).toHaveLength(0);
+    });
+
+    test('places mixed one- and two-digit subtraction in a single row', () => {
+        const placement = buildNotebookPlacement(
+            [{ example: { numbers: [12, 7], type: 'subtraction' }, index: 0 }],
+            '-'
+        );
+        const reversedPlacement = buildNotebookPlacement(
+            [{ example: { numbers: [7, 12], type: 'subtraction' }, index: 0 }],
+            '-'
+        );
+
+        const values = placement.cells
+            .filter((cell) => ['digit', 'operator'].includes(cell.kind))
+            .map((cell) => cell.value);
+        const rows = new Set(placement.cells.map((cell) => cell.row));
+        const reversedRows = new Set(reversedPlacement.cells.map((cell) => cell.row));
+
+        expect(values).toEqual(['1', '2', '-', '7', '=']);
+        expect([...rows]).toEqual([1]);
+        expect([...reversedRows]).toEqual([1]);
+        expect(placement.cells.filter((cell) => cell.kind === 'line')).toHaveLength(0);
+        expect(placement.cells.filter((cell) => cell.kind === 'answer-line')).toHaveLength(0);
+    });
+
+    test('places one-digit subtraction in a single row', () => {
+        const placement = buildNotebookPlacement(
+            [{ example: { numbers: [8, 3], type: 'subtraction' }, index: 0 }],
+            '-'
+        );
+
+        const values = placement.cells
+            .filter((cell) => ['digit', 'operator'].includes(cell.kind))
+            .map((cell) => cell.value);
+
+        expect(values).toEqual(['8', '-', '3', '=']);
+        expect(new Set(placement.cells.map((cell) => cell.row))).toEqual(new Set([1]));
+        expect(placement.cells.filter((cell) => cell.kind === 'line')).toHaveLength(0);
+    });
+
+    test('places one-digit multiplication in a single row', () => {
+        const placement = buildNotebookPlacement(
+            [{ example: { numbers: [6, 8], type: 'multiplication' }, index: 0 }],
+            'Г—'
+        );
+
+        const values = placement.cells
+            .filter((cell) => ['digit', 'operator'].includes(cell.kind))
+            .map((cell) => cell.value);
+
+        expect(values).toEqual(['6', 'Г—', '8', '=']);
+        expect(new Set(placement.cells.map((cell) => cell.row))).toEqual(new Set([1]));
+        expect(placement.requiredRows).toBe(2);
+    });
+
     test('places decimal separators without adding columns for them', () => {
         const placement = buildNotebookPlacement(
             [{ example: { numbers: ['12,30', '4,56'], type: 'addition' }, index: 0 }],

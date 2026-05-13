@@ -87,6 +87,54 @@ function getDigitCount(value) {
     return String(value).replace(/\D/g, '').length;
 }
 
+function isIntegerLike(value) {
+    return /^\d+$/.test(String(value));
+}
+
+function shouldUseHorizontalFormat(example) {
+    if (!['addition', 'subtraction', 'multiplication'].includes(example.type)) {
+        return false;
+    }
+
+    if (!example.numbers.every(isIntegerLike)) {
+        return false;
+    }
+
+    const digitCounts = example.numbers.map(getDigitCount);
+
+    if (example.type === 'addition' || example.type === 'multiplication') {
+        return digitCounts.every((count) => count === 1);
+    }
+
+    return digitCounts.length === 2
+        && digitCounts.every((count) => count === 1 || count === 2)
+        && digitCounts.some((count) => count === 1);
+}
+
+function parseHorizontalExample(example, operator) {
+    const tokens = [];
+    const exampleOperator = example.operator ?? operator;
+
+    example.numbers.forEach((number, numberIndex) => {
+        if (numberIndex > 0) {
+            tokens.push({ kind: 'operator', value: exampleOperator });
+        }
+
+        getNumberTokens(number).forEach((digit) => {
+            tokens.push({ kind: 'digit', value: digit.value });
+        });
+    });
+
+    tokens.push({ kind: 'operator', value: '=' });
+
+    return {
+        kind: 'horizontal',
+        tokens,
+        width: tokens.length,
+        height: 1
+    };
+}
+
 function parseDivisionExample(example) {
     const dividendTokens = getNumberTokens(example.dividend);
     const divisorTokens = getNumberTokens(example.divisor);
@@ -132,9 +180,13 @@ function normalizeDivisionWidths(parsedExamples) {
     });
 }
 
-function parseNotebookExample(example) {
+function parseNotebookExample(example, operator) {
     if (example.type === 'division') {
         return parseDivisionExample(example);
+    }
+
+    if (shouldUseHorizontalFormat(example)) {
+        return parseHorizontalExample(example, operator);
     }
 
     return {
@@ -155,6 +207,10 @@ function getContentHeight(parsedExample) {
     const { example, parsed } = parsedExample;
 
     if (parsed.kind === 'division') {
+        return parsed.height;
+    }
+
+    if (parsed.kind === 'horizontal') {
         return parsed.height;
     }
 
@@ -285,7 +341,7 @@ export function buildNotebookPlacement(items, operator, options = {}) {
     const parsedExamples = normalizeDivisionWidths(examples.map(({ example, index }) => ({
         example,
         index,
-        parsed: parseNotebookExample(example)
+        parsed: parseNotebookExample(example, operator)
     })));
 
     const rows = buildExampleRows(parsedExamples, page, layout);
@@ -348,6 +404,19 @@ export function buildNotebookPlacement(items, operator, options = {}) {
                         value: ''
                     });
                 }
+
+                return;
+            }
+
+            if (parsed.kind === 'horizontal') {
+                parsed.tokens.forEach((token, tokenIndex) => {
+                    cells.push({
+                        row: startRow,
+                        col: startCol + tokenIndex,
+                        kind: token.kind,
+                        value: token.value
+                    });
+                });
 
                 return;
             }

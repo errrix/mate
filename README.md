@@ -31,6 +31,7 @@ npm run build
 
 - `ARCHITECTURE.md` — архитектура приложения, routing, layout, store и поток данных.
 - `docs/OPERATIONS.md` — поведение операций, настройки и ограничения генераторов.
+- `docs/TESTING.md` — Vitest, Playwright visual snapshots и workflow обновления скриншотов.
 - `src/features/notebookGrid/README.md` — печатная сетка A4 и CSS-рендерер.
 - `AGENTS.md` — краткие инструкции для coding agents.
 
