@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { HomePage } from './components/HomePage';
 import { SettingsScreen } from './components/SettingsScreen';
 import { ExamplesScreen } from './components/ExamplesScreen';
@@ -16,6 +16,8 @@ const NotebookGridVisualTestPage = import.meta.env.DEV
 
 function App() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isFullBleedHome = location.pathname === '/';
 
     const handleGenerate = (settings) => {
         if (!hasEnabledOperation(settings)) {
@@ -31,7 +33,7 @@ function App() {
     };
 
     return (
-        <div className="container">
+        <div className={`container${isFullBleedHome ? ' container-home-full-bleed' : ''}`}>
             <SiteHeader />
             <main className="app-main">
                 <Routes>
@@ -45,7 +47,7 @@ function App() {
                             )}
                         />
                     )}
-                    <Route path="/" element={<HomePage variant="hp3" />} />
+                    <Route path="/" element={<HomePage />} />
                     <Route path="/generator" element={<SettingsScreen onGenerate={handleGenerate} />} />
                     <Route path="/result-list" element={<ExamplesScreen onBack={handleBack} />} />
                     <Route path="/faq" element={<InfoPage type="faq" />} />

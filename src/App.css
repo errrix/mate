@@ -12,6 +12,18 @@
     min-height: 0;
 }
 
+.container-home-full-bleed {
+    width: 100%;
+    max-width: none;
+    overflow: hidden;
+}
+
+.container-home-full-bleed .site-header,
+.container-home-full-bleed .site-footer {
+    padding-right: max(clamp(14px, 2.4vw, 32px), calc((100vw - var(--site-shell-max-width)) / 2 + clamp(14px, 2.4vw, 32px)));
+    padding-left: max(clamp(14px, 2.4vw, 32px), calc((100vw - var(--site-shell-max-width)) / 2 + clamp(14px, 2.4vw, 32px)));
+}
+
 @media print {
     body {
         background: white;
