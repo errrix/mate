@@ -38,7 +38,7 @@ Generated examples are not stored in `localStorage`. `/result-list` generates th
 
 The app uses `react-router-dom` with browser routing.
 
-- `/`: home page with product intro and worksheet preview.
+- `/`: marketing home page for the "math practice for today" positioning. It includes the hero, worksheet preview, benefit sections, process steps, use cases, FAQ, and final CTA.
 - `/generator`: settings form.
 - `/result-list`: generated printable examples.
 - `/faq`: FAQ content through `InfoPage`.
@@ -59,6 +59,10 @@ The app uses plain CSS imports. Shared page shell values live in `src/index.css`
 `src/App.css` owns the shared `.container` shell. Route-specific pages should use this shell instead of introducing their own app-level width. Page components can still constrain their own internal content when needed.
 
 `SiteHeader` and `SiteFooter` provide common navigation and footer links across all routes. Do not duplicate header navigation inside page components.
+
+`SiteHeader` is a compact product header: brand on the left, centered navigation to `/how-it-works` and `/faq`, and a right-side "2 минуты" promise plus CTA to `/generator`. It uses a flex `space-between` layout on desktop and stacks into full-width rows on narrower viewports.
+
+`HomePage` owns the marketing-page content and worksheet preview. Keep homepage sections inside `HomePage.jsx`/`HomePage.css`; keep shared shell behavior in `SiteHeader`, `SiteFooter`, `App.jsx`, `App.css`, and `index.css`.
 
 ## Example Shapes
 
