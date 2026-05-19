@@ -6,25 +6,22 @@ export function SiteHeader() {
     return (
         <header className="site-header">
             <Link className="site-brand" to="/">
-                <span className="site-logo-mark" aria-hidden="true">
-                    <span />
-                </span>
+                <span className="site-logo-mark" aria-hidden="true">=</span>
                 <span className="site-brand-text">
-                    <strong>Математика. Печать заданий</strong>
-                    <span>Генератор примеров для школы и дома</span>
+                    <strong>Математика на сегодня</strong>
+                    <span>короткая практика для дома и занятий</span>
                 </span>
             </Link>
 
             <nav className="site-nav" aria-label="Основная навигация">
-                <NavLink to="/generator">Генератор</NavLink>
-                <NavLink to="/how-it-works">Как это работает</NavLink>
-                <NavLink to="/faq">FAQ</NavLink>
-                <Link to="/faq">О генераторе</Link>
+                <NavLink to="/how-it-works">Как подготовить лист</NavLink>
+                <NavLink to="/faq">Вопросы</NavLink>
             </nav>
 
-            <Link className="site-profile-link" to="/generator" aria-label="Перейти к генератору">
-                <span aria-hidden="true" />
-            </Link>
+            <div className="site-header-actions">
+                <span>2 минуты</span>
+                <Link className="site-cta" to="/generator">Начать</Link>
+            </div>
         </header>
     );
 }

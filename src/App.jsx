@@ -45,7 +45,7 @@ function App() {
                             )}
                         />
                     )}
-                    <Route path="/" element={<HomePage />} />
+                    <Route path="/" element={<HomePage variant="hp3" />} />
                     <Route path="/generator" element={<SettingsScreen onGenerate={handleGenerate} />} />
                     <Route path="/result-list" element={<ExamplesScreen onBack={handleBack} />} />
                     <Route path="/faq" element={<InfoPage type="faq" />} />
