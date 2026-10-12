@@ -51,7 +51,7 @@ describe('generateSubtraction', () => {
         expect(examples).toHaveLength(20);
         for (const example of examples) {
             expect(example.type).toBe('subtraction');
-            expect(example.operator).toBe('-');
+            expect(example.operator).toBe('−');
             expect(example.numbers).toHaveLength(2);
             expectDigits(example.numbers[0], 3);
             expectDigits(example.numbers[1], 2);
@@ -65,7 +65,7 @@ describe('generateSubtraction', () => {
         expect(examples).toHaveLength(20);
         for (const example of examples) {
             expect(example.type).toBe('subtraction');
-            expect(example.operator).toBe('-');
+            expect(example.operator).toBe('−');
             expect(example.numbers).toHaveLength(2);
             example.numbers.forEach((number) => {
                 expect(number).toMatch(/^\d{2},\d{2}$/);
@@ -120,6 +120,39 @@ describe('generateDivision', () => {
     });
 });
 
+describe('value limits and trivial examples', () => {
+    test('keeps addition totals within the limit', () => {
+        for (const example of generateAddition(200, 2, 3, false, { limit: 10 })) {
+            expect(example.numbers).toHaveLength(3);
+            expect(example.numbers.every((number) => number >= 1)).toBe(true);
+            expect(example.numbers.reduce((total, number) => total + number, 0)).toBeLessThanOrEqual(10);
+        }
+    });
+
+    test('keeps subtraction within the limit with a positive answer', () => {
+        for (const example of generateSubtraction(200, 2, 2, false, { limit: 20 })) {
+            const [minuend, subtrahend] = example.numbers;
+
+            expect(minuend).toBeLessThanOrEqual(20);
+            expect(subtrahend).toBeGreaterThanOrEqual(1);
+            expect(minuend - subtrahend).toBeGreaterThanOrEqual(1);
+        }
+    });
+
+    test('avoids zero answers in one-digit subtraction', () => {
+        for (const example of generateSubtraction(300, 1, 1)) {
+            expect(example.numbers[0]).not.toBe(example.numbers[1]);
+        }
+    });
+
+    test('never divides by one', () => {
+        for (const example of generateDivision(300, 3, 1)) {
+            expect(example.divisor).toBeGreaterThanOrEqual(2);
+            expect(example.dividend / example.divisor).toBeGreaterThanOrEqual(2);
+        }
+    });
+});
+
 describe('generateExamplesFromSettings', () => {
     const settings = {
         addition: { enabled: true, count: 10, digits: 2, terms: 2, useDecimals: false },
@@ -134,6 +167,15 @@ describe('generateExamplesFromSettings', () => {
         expect(normalizeCount(-5)).toBe(0);
         expect(normalizeCount('2.7')).toBe(2);
         expect(normalizeCount(5000)).toBe(MAX_EXAMPLES_PER_OPERATION);
+    });
+
+    test('builds the same sheet from the same seed', () => {
+        const allEnabled = Object.fromEntries(
+            Object.entries(settings).map(([operation, value]) => [operation, { ...value, enabled: true }])
+        );
+
+        expect(generateExamplesFromSettings(allEnabled, 12345)).toEqual(generateExamplesFromSettings(allEnabled, 12345));
+        expect(generateExamplesFromSettings(allEnabled, 12345)).not.toEqual(generateExamplesFromSettings(allEnabled, 54321));
     });
 
     test('caps the number of examples per operation', () => {

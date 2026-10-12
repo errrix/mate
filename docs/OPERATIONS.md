@@ -10,6 +10,7 @@ Settings:
 
 - `count`: number of examples.
 - `digits`: digit count for generated integer parts.
+- `limit`: `0`, `10` or `20`. A non-zero limit replaces `digits` and decimals: terms are positive and their total stays within the limit.
 - `terms`: number of addends.
 - `useDecimals`: when enabled, addends are generated as decimal strings with a comma separator.
 
@@ -48,9 +49,12 @@ UI constraint:
 - If `minuendDigits` is lowered below the current `subtrahendDigits`, clamp `subtrahendDigits` to the new `minuendDigits`.
 - Do not show an error for this case; impossible choices should be unavailable.
 
+`limit` (`0`, `10` or `20`) replaces both digit settings and decimals: the minuend stays within the limit.
+
 Generator behavior:
 
 - The generator still guarantees non-negative subtraction examples.
+- Examples with a zero answer are re-rolled.
 - If randomly generated values would produce a negative result, it swaps the values.
 - Decimal subtraction uses the same comma-separated display format as decimal addition.
 
@@ -94,6 +98,7 @@ Settings:
 Generator behavior:
 
 - Generated examples divide evenly.
+- The divisor is never 1, and a quotient of 1 is used only when the digit ranges allow nothing else.
 - The generator computes a feasible quotient range for the selected divisor.
 - It should avoid retry loops for normal valid ranges.
 - It throws `RangeError` for impossible digit combinations.
@@ -103,6 +108,20 @@ Grid behavior:
 - Division renders a long-division corner with the dividend on the left and the divisor on the right.
 - The quotient is not printed; the grid leaves space under the horizontal answer line.
 - Placement reserves work rows based on quotient digit count and one extra blank row before the next example band.
+
+## Age Presets
+
+`src/store/agePresets.js` maps the "Готовые настройки" selector to operation settings. Choosing an age enables the listed operations with these digit settings, disables the rest and keeps `options`.
+
+| Age | Addition | Subtraction | Multiplication | Division |
+| --- | --- | --- | --- | --- |
+| 6 | within 10, 2 terms | within 10 | off | off |
+| 7 | within 20, 2 terms | within 20 | off | off |
+| 8 | 2-digit, 2 terms | 2-digit − 2-digit | 1-digit × 1-digit | 2-digit ÷ 1-digit |
+| 9 | 3-digit, 2 terms | 3-digit − 3-digit | 2-digit × 1-digit | 3-digit ÷ 1-digit |
+| 10 | 3-digit decimals, 2 terms | 4-digit − 3-digit | 3-digit × 2-digit | 4-digit ÷ 2-digit |
+
+The selector is derived from the current settings: it shows an age only while the settings match that preset exactly, otherwise "Свои настройки".
 
 ## Test Expectations
 

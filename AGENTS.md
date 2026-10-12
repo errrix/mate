@@ -76,7 +76,5 @@ Decimal addition must align integer and fractional parts separately so commas st
 ## Current Priorities
 
 1. Refactor `SettingsScreen` operation controls into config-driven controls.
-2. Remove dead components if `AdditionExample`, `SubtractionExample`, and `MultiplicationExample` remain unused.
-3. Improve user-facing validation/errors for impossible settings.
-4. Decide whether the age preset selector should become real business logic or remain UI-only.
-5. Keep print grid changes isolated and test placement logic directly.
+2. Improve user-facing validation/errors for impossible settings.
+3. Keep print grid changes isolated and test placement logic directly.

@@ -44,7 +44,7 @@ function renderItemValue(cell) {
     );
 }
 
-export function CssNotebookGrid({ placement }) {
+export function CssNotebookGrid({ placement, pageNumberOffset = 0 }) {
     const { page } = placement;
     const pages = placement.pages ?? [{ number: 1, cells: placement.cells }];
     const verticalLines = Array.from({ length: page.cols + 1 }, (_, col) => col);
@@ -125,7 +125,7 @@ export function CssNotebookGrid({ placement }) {
                         )}
                     </div>
                     <footer className="print-page-footer">
-                        Лист {placementPage.number}
+                        Лист {placementPage.number + pageNumberOffset}
                     </footer>
                 </div>
             ))}

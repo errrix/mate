@@ -25,7 +25,9 @@ Run Playwright screenshot comparisons:
 npm.cmd run test:e2e
 ```
 
-Visual tests live in `e2e/`. Baseline screenshots live next to the spec in `e2e/*-snapshots/` and should be committed when the expected layout changes.
+Visual tests live in `e2e/`. Baseline screenshots live next to the spec in `e2e/*-snapshots/` and should be committed when the expected layout changes. Baselines are per platform (`-win32`, `-darwin`), so a layout change needs the snapshots updated on each platform that runs the tests.
+
+`e2e/notebook-grid.visual.spec.js` holds the screenshot tests. `e2e/generator-flow.spec.js` holds functional tests without screenshots: settings validation, age presets, the result sheet (stable examples, sheet numbering, answer block, phone width, print layout) and site navigation. They run on any platform.
 
 The current visual tests render dev-only routes:
 

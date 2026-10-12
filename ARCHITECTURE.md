@@ -29,10 +29,12 @@ The app generates math exercises for students and formats printable examples on 
 
 - `settings`: operation settings used by the generator form.
 - `setSettings`: updates form input state.
+- `seed`: the number that decides which examples the current sheet shows.
+- `regenerateExamples`: picks a new seed.
 
 Settings are persisted in `localStorage` under `math-examples-generator.settings`. Saved settings are merged with defaults on load so newly added fields can fall back to default values.
 
-Generated examples are not stored in `localStorage`. `/result-list` generates the current sheet from the persisted settings, so direct result-page loads work without storing derived example data.
+Generated examples are not stored in `localStorage`. `/result-list` rebuilds the current sheet from the persisted settings and the persisted seed (`math-examples-generator.seed`), so a reload or toggling printed answers shows the same examples. "Создать примеры" and "Другие примеры" pick a new seed.
 
 ## Routing
 
@@ -190,10 +192,8 @@ npm.cmd run build
 ## Current Risks
 
 - `SettingsScreen` operation controls are still hand-written and should be made config-driven.
-- The age preset selector is UI-only; future business logic must define how presets map to operation settings before wiring it into the store.
-- `AdditionExample`, `SubtractionExample`, and `MultiplicationExample` are currently unused after the notebook grid refactor; confirm before deleting.
+- Age presets live in `src/store/agePresets.js`; the selector is derived from the current settings instead of being stored.
 - Print output depends on browser print behavior and printer settings, so visual checks remain necessary for grid changes.
-- User-facing validation still relies partly on `alert()` and should be improved later.
 
 ## Documentation Map
 

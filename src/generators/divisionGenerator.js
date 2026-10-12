@@ -1,8 +1,10 @@
-import { getDigitRange, getRandomInRange, getRandomNumberByDigits } from './numberUtils';
+import { getDigitRange, getRandomInRange } from './numberUtils';
 
-function generateDivisionExample(dividendDigits, divisorDigits) {
+function generateDivisionExample(dividendDigits, divisorDigits, random) {
     const dividendRange = getDigitRange(dividendDigits);
-    const divisor = getRandomNumberByDigits(divisorDigits);
+    const divisorRange = getDigitRange(divisorDigits);
+    // Dividing by 1 is not an exercise, so one-digit divisors start at 2.
+    const divisor = getRandomInRange(Math.max(2, divisorRange.min), divisorRange.max, random);
     const minQuotient = Math.ceil(dividendRange.min / divisor);
     const maxQuotient = Math.floor(dividendRange.max / divisor);
 
@@ -10,7 +12,8 @@ function generateDivisionExample(dividendDigits, divisorDigits) {
         throw new RangeError('Невозможно сгенерировать деление с такими разрядностями.');
     }
 
-    const quotient = getRandomInRange(minQuotient, maxQuotient);
+    // Skip a quotient of 1 whenever the range offers anything else.
+    const quotient = getRandomInRange(Math.min(Math.max(2, minQuotient), maxQuotient), maxQuotient, random);
 
     return {
         dividend: divisor * quotient,
@@ -19,11 +22,11 @@ function generateDivisionExample(dividendDigits, divisorDigits) {
     };
 }
 
-export function generateDivision(count, dividendDigits, divisorDigits) {
+export function generateDivision(count, dividendDigits, divisorDigits, { random = Math.random } = {}) {
     const examples = [];
 
     for (let i = 0; i < count; i++) {
-        examples.push(generateDivisionExample(dividendDigits, divisorDigits));
+        examples.push(generateDivisionExample(dividendDigits, divisorDigits, random));
     }
 
     return examples;

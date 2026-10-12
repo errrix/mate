@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { normalizeCount } from '../generators/generateExamplesFromSettings';
+import { createSeed } from '../generators/numberUtils';
 
 const SETTINGS_STORAGE_KEY = 'math-examples-generator.settings';
+const SEED_STORAGE_KEY = 'math-examples-generator.seed';
 const LEGACY_EXAMPLES_STORAGE_KEY = 'math-examples-generator.examples';
 
 export const DEFAULT_SETTINGS = {
@@ -10,14 +12,16 @@ export const DEFAULT_SETTINGS = {
         count: 10,
         digits: 2,
         terms: 2,
-        useDecimals: false
+        useDecimals: false,
+        limit: 0
     },
     subtraction: {
         enabled: false,
         count: 10,
         minuendDigits: 2,
         subtrahendDigits: 2,
-        useDecimals: false
+        useDecimals: false,
+        limit: 0
     },
     multiplication: {
         enabled: false,
@@ -77,6 +81,20 @@ function loadSettings() {
     }
 }
 
+// The seed decides which examples a sheet shows, so a reload keeps the same sheet.
+function loadSeed() {
+    if (typeof window === 'undefined') {
+        return createSeed();
+    }
+
+    try {
+        const savedSeed = JSON.parse(window.localStorage.getItem(SEED_STORAGE_KEY));
+        return Number.isInteger(savedSeed) ? savedSeed : createSeed();
+    } catch {
+        return createSeed();
+    }
+}
+
 function saveToStorage(key, value) {
     if (typeof window === 'undefined') {
         return;
@@ -91,10 +109,16 @@ function saveToStorage(key, value) {
 
 export function ExerciseStoreProvider({ children }) {
     const [settings, setSettings] = useState(loadSettings);
+    const [seed, setSeed] = useState(loadSeed);
+    const regenerateExamples = useCallback(() => setSeed(createSeed()), []);
 
     useEffect(() => {
         saveToStorage(SETTINGS_STORAGE_KEY, settings);
     }, [settings]);
+
+    useEffect(() => {
+        saveToStorage(SEED_STORAGE_KEY, seed);
+    }, [seed]);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -108,8 +132,10 @@ export function ExerciseStoreProvider({ children }) {
 
     const value = useMemo(() => ({
         settings,
-        setSettings
-    }), [settings]);
+        setSettings,
+        seed,
+        regenerateExamples
+    }), [settings, seed, regenerateExamples]);
 
     return (
         <ExerciseStoreContext.Provider value={value}>

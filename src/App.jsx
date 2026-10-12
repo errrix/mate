@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { HomePage } from './components/HomePage';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -6,7 +6,7 @@ import { ExamplesScreen } from './components/ExamplesScreen';
 import { InfoPage } from './components/InfoPage';
 import { SiteFooter } from './components/SiteFooter';
 import { SiteHeader } from './components/SiteHeader';
-import { hasEnabledOperation } from './generators/generateExamplesFromSettings';
+import { useExerciseStore } from './store/exerciseStore';
 import './App.css';
 
 const NotebookGridVisualTestPage = import.meta.env.DEV
@@ -18,13 +18,14 @@ function App() {
     const navigate = useNavigate();
     const location = useLocation();
     const isFullBleedHome = location.pathname === '/';
+    const { regenerateExamples } = useExerciseStore();
 
-    const handleGenerate = (settings) => {
-        if (!hasEnabledOperation(settings)) {
-            alert('Выберите хотя бы одну операцию!');
-            return;
-        }
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location.pathname]);
 
+    const handleGenerate = () => {
+        regenerateExamples();
         navigate('/result-list');
     };
 

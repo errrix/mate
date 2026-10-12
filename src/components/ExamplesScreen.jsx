@@ -1,27 +1,47 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
+import { buildNotebookPlacement } from '../features/notebookGrid/placement';
 import { useExerciseStore } from '../store/exerciseStore';
 import { generateExamplesFromSettings } from '../generators/generateExamplesFromSettings';
 import './ExamplesScreen.css';
 
-function groupExamples(examples) {
-    return examples.reduce((acc, example, index) => {
-        if (!acc[example.type]) {
-            acc[example.type] = [];
+const SECTIONS = [
+    { type: 'addition', title: 'Сложение', operator: '+' },
+    { type: 'subtraction', title: 'Вычитание', operator: '−' },
+    { type: 'multiplication', title: 'Умножение', operator: '×' },
+    { type: 'division', title: 'Деление', operator: '÷' }
+];
+
+function buildSections(examples, printAnswers) {
+    const sections = [];
+    let pageNumberOffset = 0;
+
+    SECTIONS.forEach((section) => {
+        const items = examples
+            .map((example, index) => ({ example, index }))
+            .filter(({ example }) => example.type === section.type);
+
+        if (items.length === 0) {
+            return;
         }
-        acc[example.type].push({ example, index });
-        return acc;
-    }, {});
+
+        const placement = buildNotebookPlacement(items, section.operator, { printAnswers });
+
+        sections.push({ ...section, placement, pageNumberOffset });
+        pageNumberOffset += placement.pages.length;
+    });
+
+    return sections;
 }
 
 export function ExamplesScreen({ onBack }) {
-    const { settings } = useExerciseStore();
+    const { settings, setSettings, seed, regenerateExamples } = useExerciseStore();
     const printAnswers = settings.options?.printAnswers === true;
     const { examples, error } = useMemo(() => {
         try {
             return {
-                examples: generateExamplesFromSettings(settings),
+                examples: generateExamplesFromSettings(settings, seed),
                 error: null
             };
         } catch (generationError) {
@@ -30,8 +50,17 @@ export function ExamplesScreen({ onBack }) {
                 error: generationError
             };
         }
-    }, [settings]);
-    const groupedExamples = groupExamples(examples);
+    }, [settings, seed]);
+    const sections = useMemo(() => buildSections(examples, printAnswers), [examples, printAnswers]);
+
+    const handlePrintAnswersChange = (event) => {
+        const { checked } = event.target;
+
+        setSettings(prev => ({
+            ...prev,
+            options: { ...prev.options, printAnswers: checked }
+        }));
+    };
 
     if (error) {
         return (
@@ -60,65 +89,33 @@ export function ExamplesScreen({ onBack }) {
     return (
         <div className="screen active">
             <h1 className="main-title">Математика</h1>
-            {Object.entries(groupedExamples).map(([type, items]) => {
-                if (type === 'addition') {
-                    return (
-                        <NotebookGrid
-                            key={type}
-                            title="Сложение"
-                            items={items}
-                            operator="+"
-                            printAnswers={printAnswers}
-                        />
-                    );
-                }
-
-                if (type === 'subtraction') {
-                    return (
-                        <NotebookGrid
-                            key={type}
-                            title="Вычитание"
-                            items={items}
-                            operator="−"
-                            printAnswers={printAnswers}
-                        />
-                    );
-                }
-
-                if (type === 'multiplication') {
-                    return (
-                        <NotebookGrid
-                            key={type}
-                            title="Умножение"
-                            items={items}
-                            operator="×"
-                            printAnswers={printAnswers}
-                        />
-                    );
-                }
-
-                if (type === 'division') {
-                    return (
-                        <NotebookGrid
-                            key={type}
-                            title="Деление"
-                            items={items}
-                            operator="÷"
-                            printAnswers={printAnswers}
-                        />
-                    );
-                }
-
-                return null;
-            })}
             <div className="button-group">
-                <button className="btn-primary" onClick={() => window.print()}>
+                <button type="button" className="btn-primary" onClick={() => window.print()}>
                     Печать
                 </button>
-                <button className="btn-secondary" onClick={onBack}>
+                <button type="button" className="btn-secondary" onClick={regenerateExamples}>
+                    Другие примеры
+                </button>
+                <button type="button" className="btn-secondary" onClick={onBack}>
                     Назад к настройкам
                 </button>
+                <label className="result-print-answers">
+                    <input
+                        type="checkbox"
+                        checked={printAnswers}
+                        onChange={handlePrintAnswersChange}
+                    />
+                    <span>Печатать ответы</span>
+                </label>
             </div>
+            {sections.map((section) => (
+                <NotebookGrid
+                    key={section.type}
+                    title={section.title}
+                    placement={section.placement}
+                    pageNumberOffset={section.pageNumberOffset}
+                />
+            ))}
         </div>
     );
 }

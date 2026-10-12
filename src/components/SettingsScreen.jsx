@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { DEFAULT_SETTINGS, useExerciseStore } from '../store/exerciseStore';
+import { AGE_OPTIONS, applyAgePreset, findMatchingAge } from '../store/agePresets';
 import {
     MAX_EXAMPLES_PER_OPERATION,
     generateExamplesFromSettings,
+    hasEnabledOperation,
     normalizeCount
 } from '../generators/generateExamplesFromSettings';
 import { buildNotebookPlacement } from '../features/notebookGrid/placement';
@@ -16,7 +18,7 @@ const AGE_HINTS = {
     10: 'Уверенные действия с многозначными числами, умножение, деление и первые десятичные числа.'
 };
 
-const AGE_OPTIONS = [6, 7, 8, 9, 10];
+const CUSTOM_SETTINGS_HINT = 'Выберите возраст, чтобы подставить готовые настройки, или настройте операции вручную.';
 
 const cloneDefaultSettings = () => ({
     addition: { ...DEFAULT_SETTINGS.addition },
@@ -25,6 +27,23 @@ const cloneDefaultSettings = () => ({
     division: { ...DEFAULT_SETTINGS.division },
     options: { ...DEFAULT_SETTINGS.options }
 });
+
+const LIMIT_OPTION_PREFIX = 'limit-';
+
+function pluralize(count, [one, few, many]) {
+    const lastTwoDigits = count % 100;
+    const lastDigit = count % 10;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+        return many;
+    }
+
+    if (lastDigit === 1) {
+        return one;
+    }
+
+    return lastDigit >= 2 && lastDigit <= 4 ? few : many;
+}
 
 function groupExamples(examples) {
     return examples.reduce((acc, example, index) => {
@@ -46,8 +65,9 @@ function getOperatorByType(type) {
 }
 
 export function SettingsScreen({ onGenerate }) {
-    const { settings, setSettings } = useExerciseStore();
-    const [selectedAge, setSelectedAge] = useState(6);
+    const { settings, setSettings, seed } = useExerciseStore();
+    const [showOperationError, setShowOperationError] = useState(false);
+    const selectedAge = useMemo(() => findMatchingAge(settings), [settings]);
 
     const summary = useMemo(() => {
         const enabledOperations = ['addition', 'subtraction', 'multiplication', 'division']
@@ -57,7 +77,7 @@ export function SettingsScreen({ onGenerate }) {
         let pagesCount = 0;
 
         try {
-            const examples = generateExamplesFromSettings(settings);
+            const examples = generateExamplesFromSettings(settings, seed);
             const groupedExamples = groupExamples(examples);
             pagesCount = Object.entries(groupedExamples).reduce((total, [type, items]) => (
                 total + buildNotebookPlacement(items, getOperatorByType(type), {
@@ -73,7 +93,7 @@ export function SettingsScreen({ onGenerate }) {
             examplesCount,
             pagesCount
         };
-    }, [settings]);
+    }, [settings, seed]);
 
     const handleToggle = (operation) => {
         setSettings(prev => ({
@@ -86,7 +106,7 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleChange = (operation, field, value) => {
-        const parsedValue = parseInt(value) || value;
+        const parsedValue = typeof value === 'boolean' ? value : Number(value);
 
         setSettings(prev => ({
             ...prev,
@@ -106,6 +126,28 @@ export function SettingsScreen({ onGenerate }) {
             }
         }));
     };
+
+    // The numbers selector mixes digit counts with "within N" limits.
+    const handleRangeChange = (operation, field, value) => {
+        const limit = value.startsWith(LIMIT_OPTION_PREFIX)
+            ? Number(value.slice(LIMIT_OPTION_PREFIX.length))
+            : 0;
+
+        setSettings(prev => ({
+            ...prev,
+            [operation]: { ...prev[operation], limit }
+        }));
+
+        if (limit === 0) {
+            handleChange(operation, field, value);
+        }
+    };
+
+    const getRangeValue = (operation, field) => (
+        settings[operation].limit
+            ? `${LIMIT_OPTION_PREFIX}${settings[operation].limit}`
+            : settings[operation][field]
+    );
 
     const handleCountChange = (operation, value) => {
         const parsedCount = parseInt(value, 10);
@@ -140,13 +182,21 @@ export function SettingsScreen({ onGenerate }) {
         }));
     };
 
+    const handleAgeChange = (value) => {
+        setSettings(prev => applyAgePreset(prev, Number(value)));
+    };
+
     const handleReset = () => {
-        setSelectedAge(6);
         setSettings(cloneDefaultSettings());
     };
 
     const handleGenerate = () => {
-        onGenerate(settings);
+        if (!hasEnabledOperation(settings)) {
+            setShowOperationError(true);
+            return;
+        }
+
+        onGenerate();
     };
 
     const renderCardClassName = (operation) => (
@@ -167,9 +217,10 @@ export function SettingsScreen({ onGenerate }) {
                 <label htmlFor="agePreset">Готовые настройки:</label>
                 <select
                     id="agePreset"
-                    value={selectedAge}
-                    onChange={(event) => setSelectedAge(Number(event.target.value))}
+                    value={selectedAge ?? ''}
+                    onChange={(event) => handleAgeChange(event.target.value)}
                 >
+                    <option value="" disabled>Свои настройки</option>
                     {AGE_OPTIONS.map(age => (
                         <option key={age} value={age}>{age} лет</option>
                     ))}
@@ -197,16 +248,18 @@ export function SettingsScreen({ onGenerate }) {
                                 onBlur={() => handleCountBlur('addition')}
                             />
                         </SettingGroup>
-                        <SettingGroup label="Разрядность">
+                        <SettingGroup label="Числа">
                             <select
-                                value={settings.addition.digits}
+                                value={getRangeValue('addition', 'digits')}
                                 disabled={!settings.addition.enabled}
-                                onChange={(event) => handleChange('addition', 'digits', event.target.value)}
+                                onChange={(event) => handleRangeChange('addition', 'digits', event.target.value)}
                             >
-                                <option value="1">Однозначные (1-9)</option>
-                                <option value="2">Двузначные (10-99)</option>
-                                <option value="3">Трехзначные (100-999)</option>
-                                <option value="4">Четырехзначные (1000-9999)</option>
+                                <option value="limit-10">До 10</option>
+                                <option value="limit-20">До 20</option>
+                                <option value="1">1–9</option>
+                                <option value="2">10–99</option>
+                                <option value="3">100–999</option>
+                                <option value="4">1000–9999</option>
                             </select>
                         </SettingGroup>
                         <SettingGroup label="Слагаемых">
@@ -224,8 +277,8 @@ export function SettingsScreen({ onGenerate }) {
                         <label className="inline-checkbox">
                             <input
                                 type="checkbox"
-                                checked={settings.addition.useDecimals}
-                                disabled={!settings.addition.enabled}
+                                checked={settings.addition.useDecimals && !settings.addition.limit}
+                                disabled={!settings.addition.enabled || settings.addition.limit > 0}
                                 onChange={(event) => handleChange('addition', 'useDecimals', event.target.checked)}
                             />
                             <span>Числа с запятой</span>
@@ -255,33 +308,35 @@ export function SettingsScreen({ onGenerate }) {
                         </SettingGroup>
                         <SettingGroup label="Уменьшаемое">
                             <select
-                                value={settings.subtraction.minuendDigits}
+                                value={getRangeValue('subtraction', 'minuendDigits')}
                                 disabled={!settings.subtraction.enabled}
-                                onChange={(event) => handleChange('subtraction', 'minuendDigits', event.target.value)}
+                                onChange={(event) => handleRangeChange('subtraction', 'minuendDigits', event.target.value)}
                             >
-                                <option value="1">Однозначные (1-9)</option>
-                                <option value="2">Двузначные (10-99)</option>
-                                <option value="3">Трехзначные (100-999)</option>
-                                <option value="4">Четырехзначные (1000-9999)</option>
+                                <option value="limit-10">До 10</option>
+                                <option value="limit-20">До 20</option>
+                                <option value="1">1–9</option>
+                                <option value="2">10–99</option>
+                                <option value="3">100–999</option>
+                                <option value="4">1000–9999</option>
                             </select>
                         </SettingGroup>
                         <SettingGroup label="Вычитаемое">
                             <select
                                 value={settings.subtraction.subtrahendDigits}
-                                disabled={!settings.subtraction.enabled}
+                                disabled={!settings.subtraction.enabled || settings.subtraction.limit > 0}
                                 onChange={(event) => handleChange('subtraction', 'subtrahendDigits', event.target.value)}
                             >
-                                <option value="1">Однозначные (1-9)</option>
-                                <option value="2" disabled={settings.subtraction.minuendDigits < 2}>Двузначные (10-99)</option>
-                                <option value="3" disabled={settings.subtraction.minuendDigits < 3}>Трехзначные (100-999)</option>
-                                <option value="4" disabled={settings.subtraction.minuendDigits < 4}>Четырехзначные (1000-9999)</option>
+                                <option value="1">1–9</option>
+                                <option value="2" disabled={settings.subtraction.minuendDigits < 2}>10–99</option>
+                                <option value="3" disabled={settings.subtraction.minuendDigits < 3}>100–999</option>
+                                <option value="4" disabled={settings.subtraction.minuendDigits < 4}>1000–9999</option>
                             </select>
                         </SettingGroup>
                         <label className="inline-checkbox">
                             <input
                                 type="checkbox"
-                                checked={settings.subtraction.useDecimals}
-                                disabled={!settings.subtraction.enabled}
+                                checked={settings.subtraction.useDecimals && !settings.subtraction.limit}
+                                disabled={!settings.subtraction.enabled || settings.subtraction.limit > 0}
                                 onChange={(event) => handleChange('subtraction', 'useDecimals', event.target.checked)}
                             />
                             <span>Числа с запятой</span>
@@ -315,9 +370,9 @@ export function SettingsScreen({ onGenerate }) {
                                 disabled={!settings.multiplication.enabled}
                                 onChange={(event) => handleChange('multiplication', 'firstDigits', event.target.value)}
                             >
-                                <option value="1">Однозначные (1-9)</option>
-                                <option value="2">Двузначные (10-99)</option>
-                                <option value="3">Трехзначные (100-999)</option>
+                                <option value="1">1–9</option>
+                                <option value="2">10–99</option>
+                                <option value="3">100–999</option>
                             </select>
                         </SettingGroup>
                         <SettingGroup label="Второй множитель">
@@ -326,9 +381,9 @@ export function SettingsScreen({ onGenerate }) {
                                 disabled={!settings.multiplication.enabled}
                                 onChange={(event) => handleChange('multiplication', 'secondDigits', event.target.value)}
                             >
-                                <option value="1">Однозначные (1-9)</option>
-                                <option value="2" disabled={settings.multiplication.firstDigits < 2}>Двузначные (10-99)</option>
-                                <option value="3" disabled={settings.multiplication.firstDigits < 3}>Трехзначные (100-999)</option>
+                                <option value="1">1–9</option>
+                                <option value="2" disabled={settings.multiplication.firstDigits < 2}>10–99</option>
+                                <option value="3" disabled={settings.multiplication.firstDigits < 3}>100–999</option>
                             </select>
                         </SettingGroup>
                     </div>
@@ -360,9 +415,9 @@ export function SettingsScreen({ onGenerate }) {
                                 disabled={!settings.division.enabled}
                                 onChange={(event) => handleChange('division', 'dividendDigits', event.target.value)}
                             >
-                                <option value="2">Двузначные (10-99)</option>
-                                <option value="3">Трехзначные (100-999)</option>
-                                <option value="4">Четырехзначные (1000-9999)</option>
+                                <option value="2">10–99</option>
+                                <option value="3">100–999</option>
+                                <option value="4">1000–9999</option>
                             </select>
                         </SettingGroup>
                         <SettingGroup label="Делитель">
@@ -371,8 +426,8 @@ export function SettingsScreen({ onGenerate }) {
                                 disabled={!settings.division.enabled}
                                 onChange={(event) => handleChange('division', 'divisorDigits', event.target.value)}
                             >
-                                <option value="1">Однозначные (1-9)</option>
-                                <option value="2">Двузначные (10-99)</option>
+                                <option value="1">1–9</option>
+                                <option value="2">10–99</option>
                             </select>
                         </SettingGroup>
                     </div>
@@ -383,7 +438,7 @@ export function SettingsScreen({ onGenerate }) {
                 <div className="hint-icon" aria-hidden="true">i</div>
                 <div>
                     <h2>Подсказка</h2>
-                    <p>Для {selectedAge} лет: {AGE_HINTS[selectedAge]}</p>
+                    <p>{selectedAge ? `Для ${selectedAge} лет: ${AGE_HINTS[selectedAge]}` : CUSTOM_SETTINGS_HINT}</p>
                 </div>
             </section>
 
@@ -392,7 +447,10 @@ export function SettingsScreen({ onGenerate }) {
                     Сбросить настройки
                 </button>
                 <div className="settings-summary" aria-live="polite">
-                    <p>Будет создано: <strong>{summary.examplesCount}</strong> примеров</p>
+                    <p>
+                        Будет создано: <strong>{summary.examplesCount}</strong>{' '}
+                        {pluralize(summary.examplesCount, ['пример', 'примера', 'примеров'])}
+                    </p>
                     <span>Листов: {summary.pagesCount}</span>
                     <span>Выбрано операций: {summary.operationsCount}</span>
                     <label className="settings-print-answers">
@@ -404,9 +462,14 @@ export function SettingsScreen({ onGenerate }) {
                         <span>Печатать ответы</span>
                     </label>
                 </div>
-                <button type="button" className="btn-primary" onClick={handleGenerate}>
-                    Создать примеры
-                </button>
+                <div className="settings-generate">
+                    {showOperationError && summary.operationsCount === 0 && (
+                        <p className="settings-error" role="alert">Выберите хотя бы одну операцию</p>
+                    )}
+                    <button type="button" className="btn-primary" onClick={handleGenerate}>
+                        Создать примеры
+                    </button>
+                </div>
             </footer>
         </div>
     );

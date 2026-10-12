@@ -24,6 +24,43 @@
     padding-left: max(clamp(14px, 2.4vw, 32px), calc((100vw - var(--site-shell-max-width)) / 2 + clamp(14px, 2.4vw, 32px)));
 }
 
+.btn-primary,
+.btn-secondary {
+    min-height: 44px;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.98rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary {
+    background: #1267d8;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: #0f56b5;
+    box-shadow: 0 10px 20px rgba(18, 103, 216, 0.22);
+}
+
+.btn-secondary {
+    border-color: #d5deea;
+    background: #ffffff;
+    color: #334155;
+}
+
+.btn-secondary:hover {
+    background: #f5f8fc;
+}
+
 @media print {
     body {
         background: white;

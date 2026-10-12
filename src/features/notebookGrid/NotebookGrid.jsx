@@ -6,10 +6,10 @@ export function NotebookGrid({
     items,
     operator,
     title,
-    printAnswers = false
+    printAnswers = false,
+    placement = buildNotebookPlacement(items, operator, { printAnswers }),
+    pageNumberOffset = 0
 }) {
-    const placement = buildNotebookPlacement(items, operator, { printAnswers });
-
     return (
         <div className="notebook-section">
             <h2 className="notebook-title">{title}</h2>
@@ -18,7 +18,7 @@ export function NotebookGrid({
                     Примеры слишком крупные для печатной сетки A4. Уменьшите параметры задания.
                 </div>
             )}
-            <CssNotebookGrid placement={placement} />
+            <CssNotebookGrid placement={placement} pageNumberOffset={pageNumberOffset} />
         </div>
     );
 }
