@@ -9,8 +9,6 @@
     --site-content-max-width: 980px;
     --site-readable-max-width: 720px;
     --site-page-gutter: clamp(16px, 3vw, 24px);
-    --site-card-radius: 15px;
-    --site-card-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 
     /* Notebook palette: paper, squared lines, ink, ballpoint blue and the red margin. */
     --paper: #fbfaf5;

@@ -271,13 +271,14 @@
     border-left: var(--notebook-ink-line-width) solid #222;
 }
 
+/* Full width, so the grid ends cleanly at the cut line instead of framing the block. */
 .print-answers {
     position: absolute;
-    left: 8mm;
-    right: 8mm;
+    left: 0;
+    right: 0;
     bottom: 0;
     z-index: 3;
-    padding: 4mm 0 1mm;
+    padding: 4mm 8mm 1mm;
     border-top: 0.35mm dashed #777;
     background: #ffffff;
     color: #222;
@@ -391,7 +392,7 @@
     }
 
     .print-answers {
-        padding: 4mm 0 1mm !important;
+        padding: 4mm 8mm 1mm !important;
     }
 
     .print-answer-list {
