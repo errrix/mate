@@ -75,11 +75,11 @@ describe('notebook placement', () => {
             .map((cell) => ({ row: cell.row, col: cell.col, kind: cell.kind, value: cell.value }));
 
         expect(contentCells).toEqual([
-            { row: 1, col: 2, kind: 'example-number', value: '1.' },
-            { row: 1, col: 3, kind: 'digit', value: '4' },
-            { row: 1, col: 4, kind: 'operator', value: '+' },
-            { row: 1, col: 5, kind: 'digit', value: '7' },
-            { row: 1, col: 6, kind: 'operator', value: '=' }
+            { row: 1, col: 1, kind: 'example-number', value: '1.' },
+            { row: 1, col: 2, kind: 'digit', value: '4' },
+            { row: 1, col: 3, kind: 'operator', value: '+' },
+            { row: 1, col: 4, kind: 'digit', value: '7' },
+            { row: 1, col: 5, kind: 'operator', value: '=' }
         ]);
         expect(placement.cells.filter((cell) => cell.kind === 'answer-line')).toHaveLength(0);
     });
@@ -141,15 +141,17 @@ describe('notebook placement', () => {
 
     test('left-aligns the incomplete last row of each operation', () => {
         const addition = Array.from({ length: 5 }, () => ({ numbers: [235, 168], type: 'addition' }));
-        const subtraction = Array.from({ length: 4 }, () => ({ numbers: [527, 389], type: 'subtraction' }));
+        const subtraction = Array.from({ length: 6 }, () => ({ numbers: [527, 389], type: 'subtraction' }));
         const placement = buildNotebookPlacement([...addition, ...subtraction]);
         const numberCells = placement.cells.filter((cell) => cell.kind === 'example-number');
 
-        // Three examples fit a row, so addition leaves two on its last row.
-        expect(numberCells[3].row).toBeGreaterThan(numberCells[2].row);
-        expect(numberCells[3].col).toBe(numberCells[0].col);
+        // Four examples fit a row: addition leaves one on its last row, subtraction leaves two.
+        expect(numberCells[4].row).toBeGreaterThan(numberCells[3].row);
+        expect(numberCells[4].col).toBe(numberCells[0].col);
         expect(numberCells[5].row).toBeGreaterThan(numberCells[4].row);
-        expect(numberCells[5].col).toBe(numberCells[0].col);
+        expect(numberCells[9].row).toBeGreaterThan(numberCells[8].row);
+        expect(numberCells[9].col).toBe(numberCells[0].col);
+        expect(numberCells[10].col - numberCells[9].col).toBe(7);
     });
 
     test('splits a long answer list across answer-only sheets', () => {
@@ -278,7 +280,7 @@ describe('notebook placement', () => {
         expect(lastRowOperatorCols).toEqual([2, 11]);
         expect(lineRows).toMatchObject({
             4: 18,
-            11: 12
+            10: 12
         });
         expect(placement.requiredCols).toBe(28);
         expect(placement.overflow).toBe(false);
@@ -299,6 +301,27 @@ describe('notebook placement', () => {
         ))).toBe(true);
     });
 
+    test('fits four two-digit examples in a row with two empty rows between bands', () => {
+        const examples = Array.from({ length: 8 }, () => ({ numbers: [73, 29], type: 'addition' }));
+        const numberCells = buildNotebookPlacement(examples).cells
+            .filter((cell) => cell.kind === 'example-number');
+
+        expect(numberCells.slice(0, 4).map((cell) => cell.col)).toEqual([2, 9, 16, 23]);
+        expect(numberCells[4]).toMatchObject({ row: numberCells[0].row + 5, col: 2 });
+    });
+
+    test('keeps a free answer cell after one-line examples', () => {
+        const examples = Array.from({ length: 3 }, () => ({ numbers: [19, 5], type: 'subtraction' }));
+        const cells = buildNotebookPlacement(examples).cells;
+        const equalsCols = cells.filter((cell) => cell.value === '=').map((cell) => cell.col);
+        const numberCols = cells.filter((cell) => cell.kind === 'example-number').map((cell) => cell.col);
+
+        // "=" is followed by at least two empty cells before the next example number.
+        equalsCols.slice(0, -1).forEach((col, index) => {
+            expect(numberCols[index + 1] - col).toBeGreaterThanOrEqual(3);
+        });
+    });
+
     test('reserves solution rows for multi-digit multiplication', () => {
         const examples = Array.from({ length: 4 }, (_, index) => ({
             example: { numbers: [123, 456], type: 'multiplication' },
@@ -315,9 +338,10 @@ describe('notebook placement', () => {
             .filter((cell) => cell.kind === 'line')
             .reduce((rows, cell) => rows.add(cell.row), new Set());
 
-        expect(firstRowOperatorCols).toEqual([3, 12, 21]);
+        // The six-digit product needs two free columns left of each example.
+        expect(firstRowOperatorCols).toEqual([4, 13, 22]);
         expect([...lineRows]).toEqual([3, 11]);
-        expect(secondRowOperator).toMatchObject({ row: 10, col: 3 });
+        expect(secondRowOperator).toMatchObject({ row: 10, col: 4 });
         expect(placement.requiredRows).toBe(16);
     });
 

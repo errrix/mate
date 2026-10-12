@@ -106,8 +106,8 @@ test.describe('result sheet', () => {
     test('puts all operations on shared sheets', async ({ page }) => {
         await createSheetForAge(page, 8);
 
-        await expect(page.locator('.print-page-footer')).toHaveText(['Лист 1', 'Лист 2', 'Лист 3']);
-        await expect(page.locator('.result-sheet-count')).toHaveText('На печать уйдёт 3 листа А4');
+        await expect(page.locator('.print-page-footer')).toHaveText(['Лист 1', 'Лист 2']);
+        await expect(page.locator('.result-sheet-count')).toHaveText('На печать уйдёт 2 листа А4');
         await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(40);
 
         const firstSheet = (await readExamples(page))[0];

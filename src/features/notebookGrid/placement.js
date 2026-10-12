@@ -1,11 +1,11 @@
 import { DEFAULT_PAGE_MODEL } from './pageModel';
 
 export const DEFAULT_NOTEBOOK_LAYOUT = {
-    gapRows: 3,
+    gapRows: 2,
     operationGapRows: 2,
     topPaddingRows: 1,
-    answerRows: 9,
-    minColsPerExample: 6,
+    answerRows: 4,
+    minColsPerExample: 5,
     minGapColsBetweenExamples: 2,
     maxGapColsBetweenExamples: 3,
     sidePaddingCols: 2
@@ -312,12 +312,37 @@ function getContentHeight(parsedExample) {
 }
 
 function getAdvanceHeight(parsedExample, layout) {
-    const gapRows = parsedExample.example.type === 'multiplication'
+    // One-line examples need no room for carries, so their rows sit one cell apart.
+    const gapRows = parsedExample.parsed.kind === 'horizontal'
+        || parsedExample.example.type === 'multiplication'
         || parsedExample.example.type === 'division'
         ? 1
         : layout.gapRows;
 
     return getContentHeight(parsedExample) + gapRows;
+}
+
+// Long multiplication writes a product that is wider than the factors and grows to the left.
+function getProductWidth({ example, parsed }) {
+    return example.type === 'multiplication' && parsed.kind === 'vertical'
+        ? example.numbers.reduce((total, number) => total + getDigitCount(number), 0)
+        : 0;
+}
+
+// A one-line example keeps a free cell after "=" so a two-digit answer fits before the next example.
+function getSlotWidth(parsedExample, layout) {
+    const { parsed } = parsedExample;
+    const contentWidth = parsed.kind === 'horizontal' ? parsed.width + 1 : parsed.width;
+
+    return Math.max(layout.minColsPerExample, contentWidth, getProductWidth(parsedExample));
+}
+
+function getSlotOffset(parsedExample) {
+    const { parsed, slotWidth } = parsedExample;
+
+    return getProductWidth(parsedExample) > parsed.width
+        ? slotWidth - parsed.width
+        : Math.max(0, Math.floor((slotWidth - parsed.width) / 2));
 }
 
 function buildExampleRows(parsedExamples, page, layout) {
@@ -338,7 +363,7 @@ function buildExampleRows(parsedExamples, page, layout) {
     };
 
     parsedExamples.forEach((parsedExample) => {
-        const slotWidth = Math.max(layout.minColsPerExample, parsedExample.parsed.width);
+        const slotWidth = getSlotWidth(parsedExample, layout);
         const nextMinWidth = currentRow.length === 0
             ? slotWidth
             : currentMinWidth + layout.minGapColsBetweenExamples + slotWidth;
@@ -545,9 +570,9 @@ function renderPageRows(pageRows, page, layout, operator) {
             ? getLeftAlignedRowStartCols(row, layout)
             : getDistributedRowStartCols(row, page, layout);
 
-        row.examples.forEach(({ example, parsed, slotWidth, index }, exampleIndex) => {
-            const slotStartCol = rowStartCols[exampleIndex];
-            const startCol = slotStartCol + Math.max(0, Math.floor((slotWidth - parsed.width) / 2));
+        row.examples.forEach((slotExample, exampleIndex) => {
+            const { example, parsed, index } = slotExample;
+            const startCol = rowStartCols[exampleIndex] + getSlotOffset(slotExample);
             const startRow = currentRowStart;
 
             cells.push({
