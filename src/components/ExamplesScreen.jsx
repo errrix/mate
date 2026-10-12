@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
 import { buildNotebookPlacement, isAnswersOnlyPage } from '../features/notebookGrid/placement';
@@ -31,6 +31,13 @@ export function ExamplesScreen({ onBack }) {
     const sheetsCount = placement.pages.length;
     const hasAnswerSheets = placement.pages.some(isAnswersOnlyPage);
 
+    const [refreshCount, setRefreshCount] = useState(0);
+
+    const handleRegenerate = () => {
+        regenerateExamples();
+        setRefreshCount(count => count + 1);
+    };
+
     const handlePrintAnswersChange = (event) => {
         const { checked } = event.target;
 
@@ -44,7 +51,7 @@ export function ExamplesScreen({ onBack }) {
         return (
             <div className="screen active result-empty">
                 <h1 className="main-title">Лист не создан</h1>
-                <p>{error.message}</p>
+                <p>Не получилось подобрать примеры с такими настройками. Измените диапазоны чисел и попробуйте снова.</p>
                 <Link className="btn-primary result-empty-link" to="/generator">
                     Вернуться к настройкам
                 </Link>
@@ -77,9 +84,13 @@ export function ExamplesScreen({ onBack }) {
                 <Link to="/faq">Подробнее</Link>
             </p>
             <div className="button-group">
-                <button type="button" className="btn-secondary" onClick={regenerateExamples}>
+                <button type="button" className="btn-secondary" onClick={handleRegenerate}>
                     Другие примеры
                 </button>
+                {/* The sheet changes silently for a screen reader, so say that it did. */}
+                <span className="visually-hidden" role="status">
+                    {refreshCount > 0 && `Примеры обновлены, вариант ${refreshCount + 1}`}
+                </span>
                 <label className="result-print-answers">
                     <input
                         type="checkbox"

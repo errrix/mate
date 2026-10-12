@@ -15,7 +15,7 @@ export function NotebookGrid({
             {title && <h2 className="notebook-title">{title}</h2>}
             {placement.overflow && (
                 <div className="notebook-warning">
-                    Примеры слишком крупные для печатной сетки A4. Уменьшите параметры задания.
+                    Примеры слишком широкие для листа А4. Уменьшите количество слагаемых или величину чисел.
                 </div>
             )}
             <CssNotebookGrid placement={placement} pageNumberOffset={pageNumberOffset} />

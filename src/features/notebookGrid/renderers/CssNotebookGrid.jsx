@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { isAnswersOnlyPage } from '../placement';
 
 const CSS_PX_PER_MM = 96 / 25.4;
@@ -8,7 +8,8 @@ function useFitScale(pageWidthMm) {
     const containerRef = useRef(null);
     const [scale, setScale] = useState(1);
 
-    useEffect(() => {
+    // Layout effect: the first paint is already scaled, so the sheet never flashes at full width.
+    useLayoutEffect(() => {
         const container = containerRef.current;
 
         if (!container || typeof ResizeObserver === 'undefined') {
@@ -16,6 +17,8 @@ function useFitScale(pageWidthMm) {
         }
 
         const pageWidthPx = pageWidthMm * CSS_PX_PER_MM;
+
+        setScale(Math.min(1, container.clientWidth / pageWidthPx));
         const observer = new ResizeObserver(([entry]) => {
             setScale(Math.min(1, entry.contentRect.width / pageWidthPx));
         });

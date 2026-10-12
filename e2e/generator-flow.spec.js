@@ -299,7 +299,8 @@ test.describe('site pages', () => {
         await page.getByRole('link', { name: 'Вопросы' }).first().click();
         await expect(page.getByRole('heading', { name: 'Вопросы и ответы' })).toBeVisible();
 
-        await page.getByRole('link', { name: 'Как это работает' }).click();
+        await page.getByRole('navigation', { name: 'Основная навигация' })
+            .getByRole('link', { name: 'Как это работает' }).click();
         await expect(page.getByRole('heading', { name: 'Как это работает' })).toBeVisible();
 
         await page.goto('/no-such-page');

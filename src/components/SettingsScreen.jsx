@@ -340,6 +340,7 @@ export function SettingsScreen({ onGenerate }) {
                                 <SettingGroup label="Количество" note={countNote.operation === 'addition' ? countNote.text : ''}>
                                     <input
                                         type="number"
+                                        inputMode="numeric"
                                         min="1"
                                         max={MAX_EXAMPLES_PER_OPERATION}
                                         value={settings.addition.count}
@@ -401,6 +402,7 @@ export function SettingsScreen({ onGenerate }) {
                                 <SettingGroup label="Количество" note={countNote.operation === 'subtraction' ? countNote.text : ''}>
                                     <input
                                         type="number"
+                                        inputMode="numeric"
                                         min="1"
                                         max={MAX_EXAMPLES_PER_OPERATION}
                                         value={settings.subtraction.count}
@@ -465,6 +467,7 @@ export function SettingsScreen({ onGenerate }) {
                                 <SettingGroup label="Количество" note={countNote.operation === 'multiplication' ? countNote.text : ''}>
                                     <input
                                         type="number"
+                                        inputMode="numeric"
                                         min="1"
                                         max={MAX_EXAMPLES_PER_OPERATION}
                                         value={settings.multiplication.count}
@@ -510,6 +513,7 @@ export function SettingsScreen({ onGenerate }) {
                                 <SettingGroup label="Количество" note={countNote.operation === 'division' ? countNote.text : ''}>
                                     <input
                                         type="number"
+                                        inputMode="numeric"
                                         min="1"
                                         max={MAX_EXAMPLES_PER_OPERATION}
                                         value={settings.division.count}
@@ -580,9 +584,11 @@ export function SettingsScreen({ onGenerate }) {
                     <div className="settings-preview" aria-hidden="true">
                         <CssNotebookGrid placement={summary.firstSheet} />
                     </div>
-                    <p className="settings-preview-note">
-                        Первый лист. Числа при создании подберутся заново.
-                    </p>
+                    {summary.operationsCount > 0 && (
+                        <p className="settings-preview-note">
+                            Первый лист. Числа при создании подберутся заново.
+                        </p>
+                    )}
                     <div className="settings-summary" aria-live="polite">
                         {summary.operationsCount === 0 ? (
                             <>
