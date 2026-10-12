@@ -42,7 +42,7 @@ test.describe('generator settings', () => {
         await page.goto('/generator');
         const summary = page.locator('.settings-summary');
 
-        await expect(page.getByRole('button', { name: 'Выключить сложение' })).toBeVisible();
+        await expect(page.getByRole('switch', { name: 'Сложение' })).toBeChecked();
         await expect(summary).toContainText('Будет создано: 10 примеров');
         await expect(page.locator('.preset-custom')).toHaveCount(0);
 
@@ -60,7 +60,7 @@ test.describe('generator settings', () => {
         await expect(page.getByRole('alert')).toHaveText('Выберите хотя бы одну операцию');
         await expect(page).toHaveURL(/\/generator$/);
 
-        await page.getByRole('button', { name: 'Включить сложение' }).click();
+        await page.getByRole('switch', { name: 'Сложение' }).click();
         await expect(page.getByRole('alert')).toHaveCount(0);
     });
 
@@ -74,16 +74,16 @@ test.describe('generator settings', () => {
 
         await ageButton(6).click();
         await expect(summary).toContainText('20 примеров');
-        await expect(page.locator('.operation-toggle[aria-pressed="true"]')).toHaveCount(2);
+        await expect(page.locator('.operation-toggle[aria-checked="true"]')).toHaveCount(2);
 
         await ageButton(8).click();
         await expect(summary).toContainText('40 примеров');
-        await expect(page.locator('.operation-toggle[aria-pressed="true"]')).toHaveCount(4);
+        await expect(page.locator('.operation-toggle[aria-checked="true"]')).toHaveCount(4);
 
         await page.reload();
         await expect(ageButton(8)).toHaveAttribute('aria-pressed', 'true');
 
-        await page.getByRole('button', { name: 'Выключить деление' }).click();
+        await page.getByRole('switch', { name: 'Деление' }).click();
         await expect(pressedAges).toHaveCount(0);
         await expect(page.locator('.preset-custom')).toBeVisible();
     });
@@ -122,7 +122,7 @@ test.describe('generator settings', () => {
         await expect(page.getByRole('button', { name: '9 лет' })).toHaveAttribute('aria-pressed', 'true');
 
         await page.getByRole('button', { name: 'Сбросить настройки' }).click();
-        await page.getByRole('button', { name: 'Включить вычитание' }).click();
+        await page.getByRole('switch', { name: 'Вычитание' }).click();
         await expect(page.getByRole('button', { name: 'Вернуть' })).toHaveCount(0);
     });
 

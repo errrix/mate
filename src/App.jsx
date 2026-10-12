@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { HomePage } from './components/HomePage';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -30,9 +30,19 @@ function App() {
     const isFullBleedHome = location.pathname === '/';
     const { regenerateExamples } = useExerciseStore();
 
+    const mainRef = useRef(null);
+    const isFirstRender = useRef(true);
+
     useEffect(() => {
         window.scrollTo(0, 0);
         document.title = PAGE_TITLES[location.pathname] ?? SITE_NAME;
+
+        // Keyboard and screen reader users continue from the new page, not from the old link.
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+        } else {
+            mainRef.current?.focus({ preventScroll: true });
+        }
     }, [location.pathname]);
 
     const handleGenerate = () => {
@@ -46,8 +56,9 @@ function App() {
 
     return (
         <div className={`container${isFullBleedHome ? ' container-home-full-bleed' : ''}`}>
+            <a className="skip-link" href="#main">К содержимому</a>
             <SiteHeader />
-            <main className="app-main">
+            <main className="app-main" id="main" tabIndex={-1} ref={mainRef}>
                 <Routes>
                     {NotebookGridVisualTestPage && (
                         <Route

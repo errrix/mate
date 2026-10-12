@@ -196,12 +196,6 @@
     transform: translateY(-1px);
 }
 
-.home-quick-ages button:focus-visible,
-.home-text-link:focus-visible {
-    outline: 3px solid rgba(33, 67, 181, 0.35);
-    outline-offset: 2px;
-}
-
 /* Sheet preview */
 .home-sheet-stage {
     --cell: 22px;

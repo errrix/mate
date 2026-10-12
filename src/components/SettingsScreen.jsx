@@ -571,8 +571,9 @@ function OperationHeader({ enabled, symbol, title, onToggle }) {
             <button
                 type="button"
                 className="operation-toggle"
-                aria-label={`${enabled ? 'Выключить' : 'Включить'} ${title.toLowerCase()}`}
-                aria-pressed={enabled}
+                role="switch"
+                aria-label={title}
+                aria-checked={enabled}
                 onClick={onToggle}
             >
                 <span />
