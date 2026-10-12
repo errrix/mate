@@ -1,231 +1,259 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AGE_OPTIONS, applyAgePreset } from '../store/agePresets';
+import { useExerciseStore } from '../store/exerciseStore';
 import './HomePage.css';
 
-const worksheetExamples = [
-    { top: '48', operator: '+', bottom: '27' },
-    { top: '93', operator: '-', bottom: '58' },
-    { top: '124', operator: '+', bottom: '236' },
-    { top: '72', operator: ':', bottom: '8' },
-    { top: '306', operator: '-', bottom: '179' },
-    { top: '37', operator: 'x', bottom: '6' },
-    { top: '450', operator: '+', bottom: '125' },
-    { top: '84', operator: ':', bottom: '7' },
-    { top: '208', operator: '-', bottom: '96' },
-    { top: '19', operator: 'x', bottom: '5' },
-    { top: '700', operator: '-', bottom: '284' },
-    { top: '56', operator: '+', bottom: '38' }
+const PREVIEW_COLS = 16;
+const PREVIEW_ROWS = 16;
+
+const previewExamples = [
+    { col: 1, row: 1, lines: ['48', '27'], operator: '+', answer: '75' },
+    { col: 6, row: 1, lines: ['93', '58'], operator: '−', answer: '35' },
+    { col: 11, row: 1, lines: ['124', '236'], operator: '+' },
+    { col: 1, row: 6, lines: ['37', '6'], operator: '×' },
+    { col: 6, row: 6, lines: ['306', '179'], operator: '−' },
+    { col: 11, row: 6, lines: ['450', '125'], operator: '+' },
+    { col: 1, row: 11, lines: ['64', '19'], operator: '+' },
+    { col: 6, row: 11, lines: ['208', '96'], operator: '−' },
+    { col: 11, row: 11, lines: ['19', '5'], operator: '×' }
 ];
 
-const page = {
-    label: 'Учителям и родителям',
-    eyebrow: 'Быстрый выпуск раздатки',
-    headline: 'Раздаточные листы для урока без вечерней подготовки',
-    lead: 'Выберите операции, величину чисел и количество заданий. Генератор соберет аккуратный лист с примерами, который можно сразу распечатать для занятия.',
-    cta: 'Создать лист',
-    secondaryCta: 'Как это работает',
-    visualTitle: 'Практика на сегодня',
-    visualCaption: 'рабочая сцена / готовый материал',
-    visualNote: 'A4 · тетрадная сетка · ответы по желанию',
-    metrics: [
-        ['2 минуты', 'на подготовку вместо ручного набора и выравнивания'],
-        ['4 операции', 'сложение, вычитание, умножение и деление'],
-        ['A4', 'готовый формат для обычной домашней или школьной печати']
-    ],
-    problemTitle: 'Когда практику надо дать сейчас, ручная верстка только мешает',
-    problemText: 'Открыть документ, придумать примеры, выровнять столбики, проверить, что все влезло на лист. Для одной тренировки это слишком много мелкой работы.',
-    problemPoints: [
-        'не нужно набирать задания вручную',
-        'не нужно искать подходящий PDF',
-        'не нужно заново верстать лист под каждую тему'
-    ],
-    benefitsTitle: 'Что получает взрослый, который готовит задания',
-    benefits: [
-        ['Быстрый старт', 'Сначала задаете параметры, затем сразу переходите к готовому листу.'],
-        ['Настройка под уровень', 'Меняйте операции, величину чисел и количество примеров.'],
-        ['Печатный результат', 'Лист рассчитан на обычную печать и практику в тетради или на бумаге.']
-    ],
-    stepsTitle: 'От темы урока до печати',
-    steps: [
-        ['01', 'Выберите навык', 'Отметьте сложение, вычитание, умножение или деление.'],
-        ['02', 'Задайте сложность', 'Укажите величину чисел и количество примеров.'],
-        ['03', 'Распечатайте лист', 'Получите готовые задания и, если нужно, блок с ответами.']
-    ],
-    useTitle: 'Подходит для разных сценариев',
-    useCases: [
-        ['Дома', 'Короткая тренировка после школы без долгой подготовки.'],
-        ['На уроке', 'Раздаточный лист для закрепления темы.'],
-        ['У репетитора', 'Быстрая подборка заданий под конкретного ученика.']
-    ],
-    faqTitle: 'Перед стартом',
-    faqs: [
-        ['Нужно регистрироваться?', 'Нет. Можно перейти в генератор и сразу собрать лист.'],
-        ['Можно менять сложность?', 'Да. Настройки помогают подобрать задания под текущий уровень.'],
-        ['Это только для начальной школы?', 'Лучше всего подходит для базовой арифметики и регулярной практики вычислений.']
-    ],
-    finalTitle: 'Соберите первый лист и оцените, сколько времени это экономит',
-    finalText: 'Начните с простого набора примеров, затем усложните параметры под ребенка, класс или ученика.'
-};
+const operations = [
+    {
+        title: 'Сложение',
+        text: 'От двух до пяти слагаемых, целые числа или с запятой.',
+        cells: buildColumnCells({ col: 1, row: 0, lines: ['248', '75'], operator: '+' })
+    },
+    {
+        title: 'Вычитание',
+        text: 'Ответ всегда больше нуля — без отрицательных чисел.',
+        cells: buildColumnCells({ col: 1, row: 0, lines: ['306', '179'], operator: '−' })
+    },
+    {
+        title: 'Умножение',
+        text: 'От таблицы умножения до трёхзначных множителей.',
+        cells: buildColumnCells({ col: 1, row: 0, lines: ['37', '6'], operator: '×' })
+    },
+    {
+        title: 'Деление',
+        text: 'Уголком и всегда нацело, без остатка.',
+        cells: buildDivisionCells({ col: 1, row: 0, dividend: '84', divisor: '7' })
+    }
+];
 
-function WorksheetPreview({ title, note }) {
+const steps = [
+    {
+        title: 'Выберите возраст',
+        text: 'От 6 до 10 лет — операции и величина чисел подставятся сами. Или настройте всё вручную.'
+    },
+    {
+        title: 'Посмотрите лист',
+        text: 'Он на экране такой же, каким выйдет из принтера. Не нравятся примеры — одна кнопка, и будут другие.'
+    },
+    {
+        title: 'Распечатайте',
+        text: 'Обычный А4. Ответы можно добавить блоком внизу листа и отрезать по линии.'
+    }
+];
+
+const facts = [
+    ['7 мм', 'клетка, как в школьной тетради'],
+    ['А4', 'печатается на любом принтере'],
+    ['до 100', 'примеров на каждую операцию'],
+    ['0', 'регистраций и отправленных данных']
+];
+
+// Cells of a column example: right-aligned numbers, the operator before the last one, a line under it.
+function buildColumnCells({ col, row, lines, operator, answer }) {
+    const width = Math.max(...lines.map((line) => line.length));
+    const cells = [];
+
+    lines.forEach((line, lineIndex) => {
+        const isLastLine = lineIndex === lines.length - 1;
+
+        [...line.padStart(width)].forEach((char, charIndex) => {
+            cells.push({
+                col: col + 1 + charIndex,
+                row: row + lineIndex,
+                value: char.trim(),
+                underlined: isLastLine
+            });
+        });
+
+        if (isLastLine) {
+            cells.push({ col, row: row + lineIndex, value: operator, kind: 'operator' });
+        }
+    });
+
+    if (answer) {
+        [...answer.padStart(width)].forEach((char, charIndex) => {
+            cells.push({
+                col: col + 1 + charIndex,
+                row: row + lines.length,
+                value: char.trim(),
+                kind: 'hand'
+            });
+        });
+    }
+
+    return cells;
+}
+
+function buildDivisionCells({ col, row, dividend, divisor }) {
+    return [
+        ...[...dividend].map((char, index) => ({ col: col + index, row, value: char })),
+        ...[...divisor].map((char, index) => ({
+            col: col + dividend.length + index,
+            row,
+            value: char,
+            kind: index === 0 ? 'corner' : 'corner-rest'
+        })),
+        { col: col + dividend.length, row: row + 1, value: '', kind: 'corner-stem' }
+    ];
+}
+
+function PaperGrid({ cols, rows, cells, className = '' }) {
     return (
         <div
-            aria-label="Пример печатного листа A4 с математическими заданиями в тетрадной сетке"
-            className="home-preview home-preview-command"
-            role="img"
+            className={`paper-grid ${className}`}
+            style={{ '--paper-cols': cols, '--paper-rows': rows }}
+            aria-hidden="true"
         >
-            <div aria-hidden="true">
-                <div className="home-preview-toolbar">
-                    <span />
-                    <span />
-                    <span />
+            {cells.map((cell) => (
+                <span
+                    key={`${cell.col}-${cell.row}-${cell.kind ?? 'digit'}`}
+                    className={[
+                        'paper-cell',
+                        cell.kind ? `paper-cell-${cell.kind}` : '',
+                        cell.underlined ? 'paper-cell-underlined' : ''
+                    ].join(' ').trim()}
+                    style={{ gridColumn: cell.col + 1, gridRow: cell.row + 1 }}
+                >
+                    {cell.value}
+                </span>
+            ))}
+        </div>
+    );
+}
+
+function SheetPreview() {
+    const cells = previewExamples.flatMap(buildColumnCells);
+
+    return (
+        <div className="home-sheet-stage">
+            <div className="home-sheet home-sheet-back" aria-hidden="true" />
+            <div className="home-sheet" role="img" aria-label="Пример листа: девять примеров в столбик на клетчатой бумаге">
+                <div className="home-sheet-header" aria-hidden="true">
+                    <span>Имя</span>
+                    <i className="home-sheet-name">Маша</i>
+                    <span>Дата</span>
+                    <i />
                 </div>
-                <div className="home-preview-paper">
-                    <div className="home-preview-topline">
-                        <span>{title}</span>
-                        <span>Дата: _______</span>
-                    </div>
-                    <div className="home-preview-grid">
-                        {worksheetExamples.map((example, index) => (
-                            <div className="home-worksheet-example" key={`${example.top}-${index}`}>
-                                <div className="home-worksheet-top">{example.top}</div>
-                                <div className="home-worksheet-bottom">
-                                    <span>{example.operator}</span>
-                                    <strong>{example.bottom}</strong>
-                                </div>
-                                <div className="home-worksheet-line" />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="home-preview-note">{note}</div>
-                </div>
+                <PaperGrid cols={PREVIEW_COLS} rows={PREVIEW_ROWS} cells={cells} />
+                <span className="home-sheet-check home-sheet-check-first" aria-hidden="true">✓</span>
+                <span className="home-sheet-check home-sheet-check-second" aria-hidden="true">✓</span>
+                <div className="home-sheet-footer" aria-hidden="true">Лист 1</div>
             </div>
         </div>
     );
 }
 
-function SectionHeader({ eyebrow, title, text }) {
-    return (
-        <div className="home-section-heading">
-            {eyebrow && <p>{eyebrow}</p>}
-            <h2>{title}</h2>
-            {text && <span>{text}</span>}
-        </div>
-    );
-}
-
-function MetricStrip({ metrics }) {
-    return (
-        <section className="home-metrics" aria-label="Ключевые преимущества">
-            {metrics.map(([value, label]) => (
-                <div className="home-metric" key={value}>
-                    <strong>{value}</strong>
-                    <span>{label}</span>
-                </div>
-            ))}
-        </section>
-    );
-}
-
-function HomeCardList({ items, className = '' }) {
-    return (
-        <div className={`home-card-list ${className}`}>
-            {items.map(([title, text], index) => (
-                <article className="home-card" key={title}>
-                    <span className="home-card-index" aria-hidden="true">0{index + 1}</span>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                </article>
-            ))}
-        </div>
-    );
-}
-
-function Steps({ steps }) {
-    return (
-        <div className="home-steps">
-            {steps.map(([number, title, text]) => (
-                <article className="home-step" key={title}>
-                    <span aria-hidden="true">{number}</span>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                </article>
-            ))}
-        </div>
-    );
-}
-
-function Faqs({ faqs }) {
-    return (
-        <div className="home-faq-list">
-            {faqs.map(([question, answer]) => (
-                <details className="home-faq" key={question}>
-                    <summary>{question}</summary>
-                    <p>{answer}</p>
-                </details>
-            ))}
-        </div>
-    );
-}
-
 export function HomePage() {
+    const navigate = useNavigate();
+    const { setSettings, regenerateExamples } = useExerciseStore();
+
+    const handleQuickStart = (age) => {
+        setSettings(prev => applyAgePreset(prev, age));
+        regenerateExamples();
+        navigate('/result-list');
+    };
+
     return (
         <article className="home-page">
             <section className="home-hero">
-                <div className="home-hero-copy">
-                    <p className="home-kicker">{page.label}</p>
-                    <p className="home-eyebrow">{page.eyebrow}</p>
-                    <h1>{page.headline}</h1>
-                    <p className="home-lead">{page.lead}</p>
-                    <div className="home-actions">
-                        <Link className="home-primary" to="/generator">{page.cta}</Link>
-                        <Link className="home-secondary" to="/how-it-works">{page.secondaryCta}</Link>
+                <div className="home-shell home-hero-inner">
+                    <div className="home-hero-copy">
+                        <p className="home-note">математика на сегодня</p>
+                        <h1>Примеры в столбик на листе в клетку</h1>
+                        <p className="home-lead">
+                            Выберите возраст или операции — получится лист А4, расчерченный как тетрадь.
+                            Остаётся распечатать и дать ребёнку ручку.
+                        </p>
+                        <div className="home-actions">
+                            <Link className="btn-primary home-cta" to="/generator">Создать лист</Link>
+                            <Link className="home-text-link" to="/how-it-works">Как это работает</Link>
+                        </div>
+                        <div className="home-quick" role="group" aria-labelledby="home-quick-label">
+                            <p id="home-quick-label">Или сразу готовый лист по возрасту:</p>
+                            <div className="home-quick-ages">
+                                {AGE_OPTIONS.map((age) => (
+                                    <button
+                                        type="button"
+                                        key={age}
+                                        onClick={() => handleQuickStart(age)}
+                                    >
+                                        {age} лет
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    <SheetPreview />
+                </div>
+            </section>
+
+            <section className="home-section">
+                <div className="home-shell">
+                    <h2>Четыре действия, записанные как в тетради</h2>
+                    <p className="home-section-lead">
+                        Цифры стоят по клеткам, разряд под разрядом. Под каждым примером оставлено место для решения.
+                    </p>
+                    <div className="home-operations">
+                        {operations.map((operation) => (
+                            <div className="home-operation" key={operation.title}>
+                                <PaperGrid cols={6} rows={3} cells={operation.cells} className="paper-grid-framed" />
+                                <h3>{operation.title}</h3>
+                                <p>{operation.text}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
-                <div className="home-hero-visual">
-                    <span className="home-visual-caption">{page.visualCaption}</span>
-                    <WorksheetPreview title={page.visualTitle} note={page.visualNote} />
+            </section>
+
+            <section className="home-section home-section-tinted">
+                <div className="home-shell">
+                    <h2>От идеи до листа в руках</h2>
+                    <ol className="home-steps">
+                        {steps.map((step, index) => (
+                            <li key={step.title}>
+                                <span className="home-step-number" aria-hidden="true">№{index + 1}</span>
+                                <h3>{step.title}</h3>
+                                <p>{step.text}</p>
+                            </li>
+                        ))}
+                    </ol>
                 </div>
             </section>
 
-            <MetricStrip metrics={page.metrics} />
-
-            <section className="home-problem">
-                <SectionHeader title={page.problemTitle} text={page.problemText} />
-                <ul>
-                    {page.problemPoints.map((point) => (
-                        <li key={point}>{point}</li>
-                    ))}
-                </ul>
-            </section>
-
-            <section className="home-section home-benefits">
-                <SectionHeader eyebrow="Преимущества" title={page.benefitsTitle} />
-                <HomeCardList items={page.benefits} />
-            </section>
-
-            <section className="home-section home-workflow">
-                <SectionHeader eyebrow="Процесс" title={page.stepsTitle} />
-                <Steps steps={page.steps} />
-            </section>
-
-            <section className="home-section home-scenarios">
-                <SectionHeader eyebrow="Сценарии" title={page.useTitle} />
-                <HomeCardList items={page.useCases} className="home-use-cases" />
-            </section>
-
-            <section className="home-section home-faq-section">
-                <SectionHeader eyebrow="Перед стартом" title={page.faqTitle} />
-                <Faqs faqs={page.faqs} />
-            </section>
-
-            <section className="home-final-cta">
-                <div>
-                    <p>Готовый лист без лишней подготовки</p>
-                    <h2>{page.finalTitle}</h2>
-                    <span>{page.finalText}</span>
+            <section className="home-section">
+                <div className="home-shell">
+                    <dl className="home-facts">
+                        {facts.map(([value, label]) => (
+                            <div key={label}>
+                                <dt>{value}</dt>
+                                <dd>{label}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                    <div className="home-final">
+                        <div>
+                            <h2>Лист на сегодня — через минуту</h2>
+                            <p>Настройки сохранятся в браузере, в следующий раз хватит одной кнопки.</p>
+                        </div>
+                        <Link className="btn-primary home-cta" to="/generator">Создать лист</Link>
+                    </div>
                 </div>
-                <Link className="home-primary" to="/generator">{page.cta}</Link>
             </section>
         </article>
     );

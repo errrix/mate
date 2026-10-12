@@ -19,7 +19,6 @@ export function SiteHeader() {
             </nav>
 
             <div className="site-header-actions">
-                <span>2 минуты</span>
                 <Link className="site-cta" to="/generator">Начать</Link>
             </div>
         </header>

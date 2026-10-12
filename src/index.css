@@ -11,11 +11,25 @@
     --site-page-gutter: clamp(16px, 3vw, 24px);
     --site-card-radius: 15px;
     --site-card-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+
+    /* Notebook palette: paper, squared lines, ink, ballpoint blue and the red margin. */
+    --paper: #fbfaf5;
+    --sheet: #ffffff;
+    --paper-line: #c9d8ea;
+    --paper-line-soft: #e4ebf4;
+    --rule: #e6e2d6;
+    --rule-strong: #cfc9b8;
+    --ink: #1b2a4a;
+    --ink-soft: #56627c;
+    --pen: #2143b5;
+    --pen-dark: #17328c;
+    --margin-red: #d9483b;
+    --font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f7faf8;
+    background: var(--paper);
     min-height: 100vh;
 }
 

@@ -42,13 +42,13 @@
 }
 
 .btn-primary {
-    background: #1267d8;
+    background: var(--pen);
     color: #ffffff;
 }
 
 .btn-primary:hover {
-    background: #0f56b5;
-    box-shadow: 0 10px 20px rgba(18, 103, 216, 0.22);
+    background: var(--pen-dark);
+    box-shadow: 0 10px 20px rgba(33, 67, 181, 0.22);
 }
 
 .btn-secondary {

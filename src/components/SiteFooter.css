@@ -5,9 +5,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    border-top: 1px solid #e5e7eb;
-    background: #ffffff;
-    color: #64748b;
+    border-top: 1px solid var(--rule);
+    background: var(--sheet);
+    color: var(--ink-soft);
     font-size: 0.9rem;
 }
 
@@ -18,13 +18,13 @@
 }
 
 .site-footer a {
-    color: #64748b;
+    color: var(--ink-soft);
     font-weight: 700;
     text-decoration: none;
 }
 
 .site-footer a:hover {
-    color: #0f6ce8;
+    color: var(--pen);
 }
 
 @media (max-width: 640px) {

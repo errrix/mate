@@ -31,7 +31,9 @@ async function createSheetForAge(page, age) {
 }
 
 // Digits and operators of every example, without the answer block.
-function readExamples(page) {
+async function readExamples(page) {
+    await expect(page.locator('.print-page').first()).toBeVisible();
+
     return page.locator('.notebook-overlay-grid').allInnerTexts();
 }
 
@@ -184,6 +186,17 @@ test.describe('result sheet', () => {
 });
 
 test.describe('site pages', () => {
+    test('opens a ready sheet from the home page age buttons', async ({ page }) => {
+        await page.goto('/');
+        await page.getByRole('button', { name: '9 лет' }).click();
+
+        await expect(page).toHaveURL(/\/result-list$/);
+        await expect(page.locator('.notebook-title')).toHaveText(['Сложение', 'Вычитание', 'Умножение', 'Деление']);
+
+        await page.getByRole('button', { name: 'Назад к настройкам' }).click();
+        await expect(page.locator('#agePreset')).toHaveValue('9');
+    });
+
     test('navigates between the home page, generator and info pages', async ({ page }) => {
         await page.goto('/');
         await page.getByRole('link', { name: 'Создать лист' }).first().click();

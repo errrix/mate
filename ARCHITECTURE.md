@@ -40,7 +40,7 @@ Generated examples are not stored in `localStorage`. `/result-list` rebuilds the
 
 The app uses `react-router-dom` with browser routing.
 
-- `/`: marketing home page for the "math practice for today" positioning. It includes the hero, worksheet preview, benefit sections, process steps, use cases, FAQ, and final CTA.
+- `/`: home page. It includes the hero with a worksheet preview and age quick-start buttons (apply a preset and open the sheet), the four operations, three steps, key facts and the final CTA.
 - `/generator`: settings form.
 - `/result-list`: generated printable examples.
 - `/faq`: FAQ content through `InfoPage`.
@@ -62,7 +62,9 @@ The app uses plain CSS imports. Shared page shell values live in `src/index.css`
 
 `SiteHeader` and `SiteFooter` provide common navigation and footer links across all routes. Do not duplicate header navigation inside page components.
 
-`SiteHeader` is a compact product header: brand on the left, centered navigation to `/how-it-works` and `/faq`, and a right-side "2 минуты" promise plus CTA to `/generator`. It uses a flex `space-between` layout on desktop and stacks into full-width rows on narrower viewports.
+`SiteHeader` is a compact product header: brand on the left, centered navigation to `/how-it-works` and `/faq`, and a CTA to `/generator` on the right. On narrower viewports the navigation wraps to a second row.
+
+The site uses a notebook look. Shared colors and the handwriting font are CSS variables in `src/index.css` (`--paper`, `--ink`, `--pen`, `--margin-red`, `--font-hand`); the Caveat font is bundled through `@fontsource/caveat`, so no third-party font requests are made.
 
 `HomePage` owns the marketing-page content and worksheet preview. Keep homepage sections inside `HomePage.jsx`/`HomePage.css`; keep shared shell behavior in `SiteHeader`, `SiteFooter`, `App.jsx`, `App.css`, and `index.css`.
 
