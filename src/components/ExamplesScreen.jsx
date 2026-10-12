@@ -4,36 +4,8 @@ import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
 import { buildNotebookPlacement } from '../features/notebookGrid/placement';
 import { useExerciseStore } from '../store/exerciseStore';
 import { generateExamplesFromSettings } from '../generators/generateExamplesFromSettings';
+import { pluralize } from '../utils/pluralize';
 import './ExamplesScreen.css';
-
-const SECTIONS = [
-    { type: 'addition', title: 'Сложение', operator: '+' },
-    { type: 'subtraction', title: 'Вычитание', operator: '−' },
-    { type: 'multiplication', title: 'Умножение', operator: '×' },
-    { type: 'division', title: 'Деление', operator: '÷' }
-];
-
-function buildSections(examples, printAnswers) {
-    const sections = [];
-    let pageNumberOffset = 0;
-
-    SECTIONS.forEach((section) => {
-        const items = examples
-            .map((example, index) => ({ example, index }))
-            .filter(({ example }) => example.type === section.type);
-
-        if (items.length === 0) {
-            return;
-        }
-
-        const placement = buildNotebookPlacement(items, section.operator, { printAnswers });
-
-        sections.push({ ...section, placement, pageNumberOffset });
-        pageNumberOffset += placement.pages.length;
-    });
-
-    return sections;
-}
 
 export function ExamplesScreen({ onBack }) {
     const { settings, setSettings, seed, regenerateExamples } = useExerciseStore();
@@ -51,7 +23,12 @@ export function ExamplesScreen({ onBack }) {
             };
         }
     }, [settings, seed]);
-    const sections = useMemo(() => buildSections(examples, printAnswers), [examples, printAnswers]);
+    // All operations share the same sheets; each one starts on a new row band.
+    const placement = useMemo(
+        () => buildNotebookPlacement(examples, undefined, { printAnswers }),
+        [examples, printAnswers]
+    );
+    const sheetsCount = placement.pages.length;
 
     const handlePrintAnswersChange = (event) => {
         const { checked } = event.target;
@@ -108,14 +85,10 @@ export function ExamplesScreen({ onBack }) {
                     <span>Печатать ответы</span>
                 </label>
             </div>
-            {sections.map((section) => (
-                <NotebookGrid
-                    key={section.type}
-                    title={section.title}
-                    placement={section.placement}
-                    pageNumberOffset={section.pageNumberOffset}
-                />
-            ))}
+            <p className="result-sheet-count">
+                На печать уйдёт {sheetsCount} {pluralize(sheetsCount, ['лист', 'листа', 'листов'])} А4
+            </p>
+            <NotebookGrid placement={placement} />
         </div>
     );
 }

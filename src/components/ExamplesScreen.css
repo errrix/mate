@@ -55,6 +55,13 @@
     accent-color: var(--pen);
 }
 
+.result-sheet-count {
+    margin: -12px 0 20px;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    text-align: center;
+}
+
 .notebook-section {
     width: 100%;
     margin-bottom: 28px;
@@ -306,7 +313,8 @@
         color-adjust: exact !important;
     }
 
-    .button-group {
+    .button-group,
+    .result-sheet-count {
         display: none !important;
     }
 

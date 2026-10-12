@@ -69,7 +69,7 @@ Addition, subtraction, and multiplication use `src/features/notebookGrid`.
 
 Placement output must stay renderer-independent. If a print bug is caused by coordinates, fix `placement.js`; if coordinates are correct, fix the CSS renderer or print styles.
 
-When examples exceed one sheet, placement should create additional pages instead of scaling. When answer printing is enabled, reserve bottom rows for the dashed cut line and answer list on the last page.
+All enabled operations share the same sheets: the result screen builds one placement for every example, and each operation starts on a new row band. When examples exceed one sheet, placement should create additional pages instead of scaling. When answer printing is enabled, reserve bottom rows for the dashed cut line and answer list on the last page; answers that do not fit there go to answer-only pages.
 
 Decimal addition must align integer and fractional parts separately so commas stay in one column. Decimal comma rendering is intentionally handled as an overlay on the last integer digit cell.
 

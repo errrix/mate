@@ -12,7 +12,7 @@ export function NotebookGrid({
 }) {
     return (
         <div className="notebook-section">
-            <h2 className="notebook-title">{title}</h2>
+            {title && <h2 className="notebook-title">{title}</h2>}
             {placement.overflow && (
                 <div className="notebook-warning">
                     Примеры слишком крупные для печатной сетки A4. Уменьшите параметры задания.

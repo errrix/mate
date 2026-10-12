@@ -22,6 +22,13 @@ test.describe('notebook grid visual placement', () => {
         });
     });
 
+    test('puts mixed operations on one sheet in separate row bands', async ({ page }) => {
+        await page.goto('/__visual-tests/notebook-grid/mixed-operations');
+
+        await expect(page.locator('.print-page')).toHaveCount(1);
+        await expect(page.locator('.print-page')).toHaveScreenshot('mixed-operations.png');
+    });
+
     test('renders overflowing examples on the next print page', async ({ page }) => {
         await page.goto('/__visual-tests/notebook-grid/paginated-addition');
 

@@ -42,6 +42,24 @@ const visualCases = {
             { example: { numbers: ['41,1', '77,7'], type: 'addition' }, index: 3 }
         ]
     },
+    // No shared operator: every example takes the sign of its own type.
+    'mixed-operations': {
+        title: 'Все действия на одном листе',
+        printAnswers: true,
+        items: [
+            { numbers: [73, 29], type: 'addition' },
+            { numbers: [11, 47], type: 'addition' },
+            { numbers: [19, 29], type: 'addition' },
+            { numbers: [68, 16], type: 'subtraction' },
+            { numbers: [85, 36], type: 'subtraction' },
+            { numbers: [97, 26], type: 'subtraction' },
+            { numbers: [8, 4], type: 'multiplication' },
+            { numbers: [4, 3], type: 'multiplication' },
+            { numbers: [34, 27], type: 'multiplication' },
+            { dividend: 90, divisor: 5, type: 'division' },
+            { dividend: 72, divisor: 8, type: 'division' }
+        ].map((example, index) => ({ example, index }))
+    },
     'paginated-addition': {
         title: 'Много примеров',
         operator: '+',

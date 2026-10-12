@@ -55,7 +55,7 @@ export function CssNotebookGrid({ placement, pageNumberOffset = 0 }) {
     const pages = placement.pages ?? [{ number: 1, cells: placement.cells }];
     const verticalLines = Array.from({ length: page.cols + 1 }, (_, col) => col);
     const horizontalLines = Array.from({ length: page.rows + 1 }, (_, row) => row);
-    const answerRows = placement.answerRows ?? placement.layout.answerRows;
+    const fallbackAnswerRows = placement.answerRows ?? placement.layout.answerRows;
     const [stackRef, fitScale] = useFitScale(page.pageWidthMm);
 
     return (
@@ -116,7 +116,9 @@ export function CssNotebookGrid({ placement, pageNumberOffset = 0 }) {
                         {placementPage.answers?.length > 0 && (
                             <section
                                 className="print-answers"
-                                style={{ minHeight: `calc(${answerRows} * var(--notebook-cell-size))` }}
+                                style={{
+                                    minHeight: `calc(${placementPage.answerRows ?? fallbackAnswerRows} * var(--notebook-cell-size))`
+                                }}
                                 aria-label="Ответы"
                             >
                                 <h3>Ответы</h3>

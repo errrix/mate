@@ -103,12 +103,16 @@ test.describe('generator settings', () => {
 });
 
 test.describe('result sheet', () => {
-    test('numbers sheets continuously across operations', async ({ page }) => {
+    test('puts all operations on shared sheets', async ({ page }) => {
         await createSheetForAge(page, 8);
 
-        await expect(page.locator('.notebook-title')).toHaveText(['Сложение', 'Вычитание', 'Умножение', 'Деление']);
-        await expect(page.locator('.print-page-footer')).toHaveText(['Лист 1', 'Лист 2', 'Лист 3', 'Лист 4']);
+        await expect(page.locator('.print-page-footer')).toHaveText(['Лист 1', 'Лист 2', 'Лист 3']);
+        await expect(page.locator('.result-sheet-count')).toHaveText('На печать уйдёт 3 листа А4');
         await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(40);
+
+        const firstSheet = (await readExamples(page))[0];
+        expect(firstSheet).toContain('+');
+        expect(firstSheet).toContain('−');
     });
 
     test('keeps the same examples until new ones are requested', async ({ page }) => {
@@ -119,7 +123,7 @@ test.describe('result sheet', () => {
         expect(await readExamples(page)).toEqual(examples);
 
         await page.getByLabel('Печатать ответы').check();
-        await expect(page.locator('.print-answers')).toHaveCount(4);
+        await expect(page.locator('.print-answers')).toHaveCount(1);
         expect(await readExamples(page)).toEqual(examples);
 
         await page.getByRole('button', { name: 'Другие примеры' }).click();
@@ -128,9 +132,9 @@ test.describe('result sheet', () => {
 
     test('keeps examples within the limit for the youngest preset', async ({ page }) => {
         await createSheetForAge(page, 6);
-        const [addition, subtraction] = await readExamples(page);
-        const sums = [...addition.matchAll(/(\d+)\s*\+\s*(\d+)/g)].map(([, a, b]) => Number(a) + Number(b));
-        const minuends = [...subtraction.matchAll(/(\d+)\s*−\s*(\d+)/g)].map(([, a]) => Number(a));
+        const sheet = (await readExamples(page)).join('\n');
+        const sums = [...sheet.matchAll(/(\d+)\s*\+\s*(\d+)/g)].map(([, a, b]) => Number(a) + Number(b));
+        const minuends = [...sheet.matchAll(/(\d+)\s*−\s*(\d+)/g)].map(([, a]) => Number(a));
 
         expect(sums).toHaveLength(10);
         expect(Math.max(...sums)).toBeLessThanOrEqual(10);
@@ -208,7 +212,7 @@ test.describe('site pages', () => {
         await page.getByRole('button', { name: '9 лет' }).click();
 
         await expect(page).toHaveURL(/\/result-list$/);
-        await expect(page.locator('.notebook-title')).toHaveText(['Сложение', 'Вычитание', 'Умножение', 'Деление']);
+        await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(40);
 
         await page.getByRole('button', { name: 'Назад к настройкам' }).click();
         await expect(page.getByRole('button', { name: '9 лет' })).toHaveAttribute('aria-pressed', 'true');

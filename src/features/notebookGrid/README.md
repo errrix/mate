@@ -26,13 +26,17 @@ The CSS print rule uses `@page { margin: 0; size: A4; }`. Printer hardware may s
 
 `placement.js` owns all example positioning, pagination, example numbering, and optional answer data.
 
-Examples are packed left to right by their actual cell width inside a content area with `2` empty cells of padding on the left and right page edges. Neighboring examples keep at least `2` empty cells between them and distributed rows cap that gap at `3` cells. If the next example would exceed the content area with the minimum gap, placement moves it to the next row band and keeps the digits aligned inside that new band. Remaining horizontal space is distributed across gaps in non-final rows up to that cap. The final row is left-aligned with the minimum gap instead of being centered or stretched.
+Examples are packed left to right by their actual cell width inside a content area with `2` empty cells of padding on the left and right page edges. Neighboring examples keep at least `2` empty cells between them and distributed rows cap that gap at `3` cells. If the next example would exceed the content area with the minimum gap, placement moves it to the next row band and keeps the digits aligned inside that new band. Remaining horizontal space is distributed across gaps in full rows up to that cap.
+
+Each operation starts on a new row band, with at least `operationGapRows` empty rows after the previous operation. The last row of an operation is left-aligned with the minimum gap whenever one more example would still fit in it, instead of being centered or stretched.
 
 Input:
 
 ```js
 buildNotebookPlacement(items, operator, { printAnswers: false })
 ```
+
+`items` may mix operations: the result screen passes every generated example in one call so all operations share the same sheets. `operator` is optional; without it each example uses its own `operator` field or the sign of its `type`.
 
 Output:
 
@@ -44,6 +48,7 @@ Output:
   pages: [
     {
       number: 1,
+      answerRows: 0,
       cells: [
         { row: 1, col: 4, kind: "example-number", value: "1." },
         { row: 1, col: 6, kind: "digit", value: "1" },
@@ -87,7 +92,7 @@ Division examples render a long-division corner on the shared grid. The dividend
 
 When examples do not fit on one sheet, placement creates additional `pages` instead of scaling the grid. `overflow` is reserved for content that cannot fit within one page row band or exceeds available columns.
 
-When `printAnswers` is true, placement attaches `answers` to the last page and reports the reserved height as `answerRows`: at least `layout.answerRows`, more when the answer list needs it. If the answers do not fit under the last examples, placement adds one more page that holds only the answers. The renderer draws a dashed cut line and a compact answer list in that reserved area.
+When `printAnswers` is true, placement attaches `answers` to the last page and reports the reserved height as that page's `answerRows`: at least `layout.answerRows`, more when the answer list needs it. If the answers do not fit under the last examples, placement adds pages that hold only answers, as many as the list needs. The top-level `answerRows` mirrors the last page. The renderer draws a dashed cut line and a compact answer list in that reserved area.
 
 On screen the renderer scales each sheet down to the available width; print always uses the full A4 size.
 

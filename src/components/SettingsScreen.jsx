@@ -8,6 +8,7 @@ import {
     normalizeCount
 } from '../generators/generateExamplesFromSettings';
 import { buildNotebookPlacement } from '../features/notebookGrid/placement';
+import { pluralize } from '../utils/pluralize';
 import './SettingsScreen.css';
 
 const AGE_HINTS = {
@@ -35,21 +36,6 @@ const OPERATIONS = ['addition', 'subtraction', 'multiplication', 'division'];
 const isDefaultOperations = (settings) => OPERATIONS.every((operation) => (
     JSON.stringify(settings[operation]) === JSON.stringify(DEFAULT_SETTINGS[operation])
 ));
-
-function pluralize(count, [one, few, many]) {
-    const lastTwoDigits = count % 100;
-    const lastDigit = count % 10;
-
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-        return many;
-    }
-
-    if (lastDigit === 1) {
-        return one;
-    }
-
-    return lastDigit >= 2 && lastDigit <= 4 ? few : many;
-}
 
 const OPERATION_SIGNS = {
     addition: '+',
@@ -86,25 +72,6 @@ function buildSamples(settings, seed) {
     }));
 }
 
-function groupExamples(examples) {
-    return examples.reduce((acc, example, index) => {
-        if (!acc[example.type]) {
-            acc[example.type] = [];
-        }
-        acc[example.type].push({ example, index });
-        return acc;
-    }, {});
-}
-
-function getOperatorByType(type) {
-    return {
-        addition: '+',
-        subtraction: '−',
-        multiplication: '×',
-        division: '÷'
-    }[type];
-}
-
 export function SettingsScreen({ onGenerate }) {
     const { settings, setSettings, seed } = useExerciseStore();
     const [showOperationError, setShowOperationError] = useState(false);
@@ -119,12 +86,9 @@ export function SettingsScreen({ onGenerate }) {
 
         try {
             const examples = generateExamplesFromSettings(settings, seed);
-            const groupedExamples = groupExamples(examples);
-            pagesCount = Object.entries(groupedExamples).reduce((total, [type, items]) => (
-                total + buildNotebookPlacement(items, getOperatorByType(type), {
-                    printAnswers: settings.options?.printAnswers === true
-                }).pages.length
-            ), 0);
+            pagesCount = buildNotebookPlacement(examples, undefined, {
+                printAnswers: settings.options?.printAnswers === true
+            }).pages.length;
         } catch {
             pagesCount = 0;
         }

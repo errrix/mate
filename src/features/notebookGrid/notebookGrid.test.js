@@ -75,11 +75,11 @@ describe('notebook placement', () => {
             .map((cell) => ({ row: cell.row, col: cell.col, kind: cell.kind, value: cell.value }));
 
         expect(contentCells).toEqual([
-            { row: 1, col: 12, kind: 'example-number', value: '1.' },
-            { row: 1, col: 13, kind: 'digit', value: '4' },
-            { row: 1, col: 14, kind: 'operator', value: '+' },
-            { row: 1, col: 15, kind: 'digit', value: '7' },
-            { row: 1, col: 16, kind: 'operator', value: '=' }
+            { row: 1, col: 2, kind: 'example-number', value: '1.' },
+            { row: 1, col: 3, kind: 'digit', value: '4' },
+            { row: 1, col: 4, kind: 'operator', value: '+' },
+            { row: 1, col: 5, kind: 'digit', value: '7' },
+            { row: 1, col: 6, kind: 'operator', value: '=' }
         ]);
         expect(placement.cells.filter((cell) => cell.kind === 'answer-line')).toHaveLength(0);
     });
@@ -116,6 +116,52 @@ describe('notebook placement', () => {
         expect(placement.answerRows).toBeGreaterThan(placement.layout.answerRows);
         expect(lowestRow).toBeLessThan(placement.page.rows - placement.answerRows);
         expect(placement.pages.slice(0, -1).every((page) => page.answers.length === 0)).toBe(true);
+    });
+
+    test('starts each operation on a new row of a shared sheet', () => {
+        const placement = buildNotebookPlacement([
+            { numbers: [235, 168], type: 'addition' },
+            { numbers: [412, 379], type: 'addition' },
+            { numbers: [527, 389], type: 'subtraction' },
+            { numbers: [34, 27], type: 'multiplication' }
+        ]);
+        const numberRows = placement.cells
+            .filter((cell) => cell.kind === 'example-number')
+            .map((cell) => cell.row);
+        const operators = placement.cells
+            .filter((cell) => cell.kind === 'operator')
+            .map((cell) => cell.value);
+
+        expect(placement.pages).toHaveLength(1);
+        expect(numberRows[0]).toBe(numberRows[1]);
+        expect(numberRows[2]).toBeGreaterThan(numberRows[1]);
+        expect(numberRows[3]).toBeGreaterThan(numberRows[2]);
+        expect(operators).toEqual(['+', '+', '−', '×']);
+    });
+
+    test('left-aligns the incomplete last row of each operation', () => {
+        const addition = Array.from({ length: 5 }, () => ({ numbers: [235, 168], type: 'addition' }));
+        const subtraction = Array.from({ length: 4 }, () => ({ numbers: [527, 389], type: 'subtraction' }));
+        const placement = buildNotebookPlacement([...addition, ...subtraction]);
+        const numberCells = placement.cells.filter((cell) => cell.kind === 'example-number');
+
+        // Three examples fit a row, so addition leaves two on its last row.
+        expect(numberCells[3].row).toBeGreaterThan(numberCells[2].row);
+        expect(numberCells[3].col).toBe(numberCells[0].col);
+        expect(numberCells[5].row).toBeGreaterThan(numberCells[4].row);
+        expect(numberCells[5].col).toBe(numberCells[0].col);
+    });
+
+    test('splits a long answer list across answer-only sheets', () => {
+        const items = Array.from({ length: 400 }, () => ({ numbers: [4, 7], type: 'addition' }));
+        const placement = buildNotebookPlacement(items, undefined, { printAnswers: true });
+        const answerPages = placement.pages.filter((page) => page.answers.length > 0);
+
+        expect(answerPages.length).toBeGreaterThan(1);
+        expect(answerPages.every((page) => page.cells.length === 0)).toBe(true);
+        expect(answerPages.every((page) => page.answerRows <= placement.page.rows)).toBe(true);
+        expect(answerPages.flatMap((page) => page.answers.map((answer) => answer.number)))
+            .toEqual(items.map((_, index) => index + 1));
     });
 
     test('builds placement for a very large number of examples', () => {
