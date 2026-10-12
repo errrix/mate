@@ -111,7 +111,7 @@ Grid behavior:
 
 ## Age Presets
 
-`src/store/agePresets.js` maps the "Готовые настройки" selector to operation settings. Choosing an age enables the listed operations with these digit settings, disables the rest and keeps `options`.
+`src/store/agePresets.js` maps the "Готовые настройки по возрасту" buttons (generator and home page quick start) to operation settings. Choosing an age enables the listed operations with these digit settings, disables the rest and keeps `options`.
 
 | Age | Addition | Subtraction | Multiplication | Division |
 | --- | --- | --- | --- | --- |
@@ -121,7 +121,9 @@ Grid behavior:
 | 9 | 3-digit, 2 terms | 3-digit − 3-digit | 2-digit × 1-digit | 3-digit ÷ 1-digit |
 | 10 | 3-digit decimals, 2 terms | 4-digit − 3-digit | 3-digit × 2-digit | 4-digit ÷ 2-digit |
 
-The selector is derived from the current settings: it shows an age only while the settings match that preset exactly, otherwise "Свои настройки".
+The pressed button is derived from the current settings: an age is highlighted only while the settings match that preset exactly, otherwise the generator shows "свои настройки".
+
+Each enabled operation card also shows one sample example built from its current settings.
 
 ## Test Expectations
 

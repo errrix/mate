@@ -57,7 +57,7 @@
 .site-brand-text strong {
     color: var(--ink);
     font-size: 1.14rem;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.15;
 }
 
@@ -111,7 +111,7 @@
     background: var(--pen);
     border-radius: 8px;
     font-size: 0.95rem;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.15;
     white-space: nowrap;
 }

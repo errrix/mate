@@ -45,6 +45,41 @@ function pluralize(count, [one, few, many]) {
     return lastDigit >= 2 && lastDigit <= 4 ? few : many;
 }
 
+const OPERATION_SIGNS = {
+    addition: '+',
+    subtraction: '−',
+    multiplication: '×',
+    division: ':'
+};
+
+// One example per enabled operation, so the cards show what the current settings produce.
+function buildSamples(settings, seed) {
+    const operations = Object.keys(OPERATION_SIGNS);
+    const disabled = Object.fromEntries(operations.map((operation) => [
+        operation,
+        { ...settings[operation], enabled: false }
+    ]));
+
+    return Object.fromEntries(operations.map((operation, index) => {
+        if (!settings[operation].enabled) {
+            return [operation, ''];
+        }
+
+        try {
+            const [example] = generateExamplesFromSettings({
+                ...settings,
+                ...disabled,
+                [operation]: { ...settings[operation], count: 1 }
+            }, seed + index);
+            const numbers = example.numbers ?? [example.dividend, example.divisor];
+
+            return [operation, numbers.join(` ${OPERATION_SIGNS[operation]} `)];
+        } catch {
+            return [operation, ''];
+        }
+    }));
+}
+
 function groupExamples(examples) {
     return examples.reduce((acc, example, index) => {
         if (!acc[example.type]) {
@@ -94,6 +129,8 @@ export function SettingsScreen({ onGenerate }) {
             pagesCount
         };
     }, [settings, seed]);
+
+    const samples = useMemo(() => buildSamples(settings, seed), [settings, seed]);
 
     const handleToggle = (operation) => {
         setSettings(prev => ({
@@ -207,30 +244,37 @@ export function SettingsScreen({ onGenerate }) {
         <div className="screen active settings-screen">
             <header className="settings-header">
                 <div>
-                    <p className="settings-kicker">Генератор заданий</p>
-                    <h1>Быстрая настройка</h1>
-                    <p className="settings-subtitle">Выберите возраст и настройте операции вручную</p>
+                    <p className="settings-kicker">генератор заданий</p>
+                    <h1>Настройте лист</h1>
+                    <p className="settings-subtitle">
+                        Выберите возраст — или включите нужные действия и задайте числа сами.
+                    </p>
                 </div>
             </header>
 
-            <section className="preset-panel" aria-label="Готовые настройки">
-                <label htmlFor="agePreset">Готовые настройки:</label>
-                <select
-                    id="agePreset"
-                    value={selectedAge ?? ''}
-                    onChange={(event) => handleAgeChange(event.target.value)}
-                >
-                    <option value="" disabled>Свои настройки</option>
+            <section className="preset-panel" aria-labelledby="agePresetLabel">
+                <p id="agePresetLabel">Готовые настройки по возрасту</p>
+                <div className="preset-ages" role="group" aria-labelledby="agePresetLabel">
                     {AGE_OPTIONS.map(age => (
-                        <option key={age} value={age}>{age} лет</option>
+                        <button
+                            type="button"
+                            key={age}
+                            className="preset-age"
+                            aria-pressed={selectedAge === age}
+                            onClick={() => handleAgeChange(age)}
+                        >
+                            {age} лет
+                        </button>
                     ))}
-                </select>
+                </div>
+                {selectedAge === null && summary.operationsCount > 0 && (
+                    <span className="preset-custom">свои настройки</span>
+                )}
             </section>
 
             <section className="operations-grid" aria-label="Операции">
                 <article className={renderCardClassName('addition')}>
                     <OperationHeader
-                        id="additionEnabled"
                         enabled={settings.addition.enabled}
                         symbol="+"
                         title="Сложение"
@@ -284,11 +328,11 @@ export function SettingsScreen({ onGenerate }) {
                             <span>Числа с запятой</span>
                         </label>
                     </div>
+                    <OperationSample text={samples.addition} />
                 </article>
 
                 <article className={renderCardClassName('subtraction')}>
                     <OperationHeader
-                        id="subtractionEnabled"
                         enabled={settings.subtraction.enabled}
                         symbol="−"
                         title="Вычитание"
@@ -342,11 +386,11 @@ export function SettingsScreen({ onGenerate }) {
                             <span>Числа с запятой</span>
                         </label>
                     </div>
+                    <OperationSample text={samples.subtraction} />
                 </article>
 
                 <article className={renderCardClassName('multiplication')}>
                     <OperationHeader
-                        id="multiplicationEnabled"
                         enabled={settings.multiplication.enabled}
                         symbol="×"
                         title="Умножение"
@@ -387,11 +431,11 @@ export function SettingsScreen({ onGenerate }) {
                             </select>
                         </SettingGroup>
                     </div>
+                    <OperationSample text={samples.multiplication} />
                 </article>
 
                 <article className={renderCardClassName('division')}>
                     <OperationHeader
-                        id="divisionEnabled"
                         enabled={settings.division.enabled}
                         symbol="÷"
                         title="Деление"
@@ -431,13 +475,13 @@ export function SettingsScreen({ onGenerate }) {
                             </select>
                         </SettingGroup>
                     </div>
+                    <OperationSample text={samples.division} />
                 </article>
             </section>
 
             <section className="hint-panel" aria-live="polite">
-                <div className="hint-icon" aria-hidden="true">i</div>
                 <div>
-                    <h2>Подсказка</h2>
+                    <h2>подсказка</h2>
                     <p>{selectedAge ? `Для ${selectedAge} лет: ${AGE_HINTS[selectedAge]}` : CUSTOM_SETTINGS_HINT}</p>
                 </div>
             </section>
@@ -475,20 +519,11 @@ export function SettingsScreen({ onGenerate }) {
     );
 }
 
-function OperationHeader({ id, enabled, symbol, title, onToggle }) {
+function OperationHeader({ enabled, symbol, title, onToggle }) {
     return (
         <div className="operation-header">
-            <label className="operation-check" htmlFor={id}>
-                <input
-                    type="checkbox"
-                    id={id}
-                    checked={enabled}
-                    onChange={onToggle}
-                />
-                <span aria-hidden="true" />
-            </label>
             <span className="operation-symbol" aria-hidden="true">{symbol}</span>
-            <label className="operation-title" htmlFor={id}>{title}</label>
+            <h2 className="operation-title">{title}</h2>
             <button
                 type="button"
                 className="operation-toggle"
@@ -499,6 +534,18 @@ function OperationHeader({ id, enabled, symbol, title, onToggle }) {
                 <span />
             </button>
         </div>
+    );
+}
+
+function OperationSample({ text }) {
+    if (!text) {
+        return null;
+    }
+
+    return (
+        <p className="operation-sample">
+            Например: <span>{text}</span>
+        </p>
     );
 }
 

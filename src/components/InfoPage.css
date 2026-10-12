@@ -1,52 +1,52 @@
 .info-page {
     min-height: 560px;
-    background: #ffffff;
+    background: var(--paper);
+    color: var(--ink);
 }
 
 .info-content {
     width: min(var(--site-content-max-width), calc(100% - var(--site-page-gutter) * 2));
     margin: 0 auto;
-    padding: 72px 0 96px;
+    padding: clamp(40px, 6vw, 72px) 0 clamp(56px, 8vw, 96px);
 }
 
 .info-content h1 {
-    margin: 0;
-    color: #111827;
-    text-align: left;
-    font-size: clamp(3rem, 6vw, 5rem);
-    line-height: 1.05;
+    color: var(--ink);
+    font-size: clamp(2rem, 4.4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
 }
 
 .info-content > p {
     max-width: var(--site-readable-max-width);
-    margin: 22px 0 0;
-    color: #5f6876;
-    font-size: 1.18rem;
+    margin-top: 16px;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
     line-height: 1.6;
 }
 
 .info-list {
-    margin-top: 42px;
+    margin-top: 34px;
     display: grid;
-    gap: 16px;
+    gap: 14px;
 }
 
 .info-item {
-    padding: 24px 26px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #ffffff;
+    padding: 20px 24px;
+    border: 1.5px solid var(--rule);
+    border-radius: 6px;
+    background: var(--sheet);
 }
 
 .info-item h2 {
-    margin: 0;
-    color: #111827;
-    font-size: 1.3rem;
+    color: var(--ink);
+    font-size: 1.2rem;
+    font-weight: 700;
 }
 
 .info-item p {
-    margin: 10px 0 0;
-    color: #5f6876;
-    font-size: 1rem;
+    margin-top: 8px;
+    color: var(--ink-soft);
     line-height: 1.55;
 }

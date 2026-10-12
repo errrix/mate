@@ -25,7 +25,7 @@ async function seedSettings(page, overrides) {
 
 async function createSheetForAge(page, age) {
     await page.goto('/generator');
-    await page.locator('#agePreset').selectOption(String(age));
+    await page.getByRole('button', { name: `${age} лет` }).click();
     await page.getByRole('button', { name: 'Создать примеры' }).click();
     await expect(page).toHaveURL(/\/result-list$/);
 }
@@ -51,24 +51,26 @@ test.describe('generator settings', () => {
 
     test('age preset fills the operations and falls back to custom settings after an edit', async ({ page }) => {
         await page.goto('/generator');
-        const agePreset = page.locator('#agePreset');
+        const ageButton = (age) => page.getByRole('button', { name: `${age} лет` });
+        const pressedAges = page.locator('.preset-age[aria-pressed="true"]');
         const summary = page.locator('.settings-summary');
 
-        await expect(agePreset).toHaveValue('');
+        await expect(pressedAges).toHaveCount(0);
 
-        await agePreset.selectOption('6');
+        await ageButton(6).click();
         await expect(summary).toContainText('20 примеров');
         await expect(summary).toContainText('Выбрано операций: 2');
 
-        await agePreset.selectOption('8');
+        await ageButton(8).click();
         await expect(summary).toContainText('40 примеров');
         await expect(summary).toContainText('Выбрано операций: 4');
 
         await page.reload();
-        await expect(agePreset).toHaveValue('8');
+        await expect(ageButton(8)).toHaveAttribute('aria-pressed', 'true');
 
         await page.getByRole('button', { name: 'Выключить деление' }).click();
-        await expect(agePreset).toHaveValue('');
+        await expect(pressedAges).toHaveCount(0);
+        await expect(page.locator('.preset-custom')).toBeVisible();
     });
 
     test('keeps the example count between 1 and 100', async ({ page }) => {
@@ -194,7 +196,7 @@ test.describe('site pages', () => {
         await expect(page.locator('.notebook-title')).toHaveText(['Сложение', 'Вычитание', 'Умножение', 'Деление']);
 
         await page.getByRole('button', { name: 'Назад к настройкам' }).click();
-        await expect(page.locator('#agePreset')).toHaveValue('9');
+        await expect(page.getByRole('button', { name: '9 лет' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     test('navigates between the home page, generator and info pages', async ({ page }) => {
@@ -203,7 +205,7 @@ test.describe('site pages', () => {
         await expect(page).toHaveURL(/\/generator$/);
 
         await page.getByRole('link', { name: 'Вопросы' }).first().click();
-        await expect(page.getByRole('heading', { name: 'FAQ' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Вопросы и ответы' })).toBeVisible();
 
         await page.getByRole('link', { name: 'Как подготовить лист' }).click();
         await expect(page.getByRole('heading', { name: 'Как это работает' })).toBeVisible();

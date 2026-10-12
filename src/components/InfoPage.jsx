@@ -3,7 +3,7 @@ import './InfoPage.css';
 
 const pageContent = {
     faq: {
-        title: 'FAQ',
+        title: 'Вопросы и ответы',
         lead: 'Короткие ответы про генератор, печать и настройки листа.',
         items: [
             {

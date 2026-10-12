@@ -35,7 +35,7 @@
     border-radius: 8px;
     font-family: inherit;
     font-size: 0.98rem;
-    font-weight: 800;
+    font-weight: 700;
     text-decoration: none;
     cursor: pointer;
     transition: background-color 0.2s, box-shadow 0.2s;
@@ -52,13 +52,14 @@
 }
 
 .btn-secondary {
-    border-color: #d5deea;
-    background: #ffffff;
-    color: #334155;
+    border: 1.5px solid var(--rule-strong);
+    background: var(--sheet);
+    color: var(--ink);
 }
 
 .btn-secondary:hover {
-    background: #f5f8fc;
+    border-color: var(--pen);
+    color: var(--pen);
 }
 
 @media print {

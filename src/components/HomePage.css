@@ -118,9 +118,9 @@
 
 .home-hero h1 {
     max-width: 13em;
-    font-size: clamp(2.2rem, 5.2vw, 3.7rem);
-    font-weight: 800;
-    line-height: 1.04;
+    font-size: clamp(2.1rem, 4.6vw, 3.3rem);
+    font-weight: 650;
+    line-height: 1.06;
 }
 
 .home-lead {
@@ -303,7 +303,7 @@
 .home-section h2 {
     max-width: 18em;
     font-size: clamp(1.6rem, 3.2vw, 2.3rem);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.12;
 }
 
@@ -325,7 +325,7 @@
 .home-operation h3 {
     margin-top: 18px;
     font-size: 1.15rem;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .home-operation p {
@@ -353,7 +353,7 @@
 .home-steps h3 {
     margin-top: 6px;
     font-size: 1.2rem;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .home-steps p {

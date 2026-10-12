@@ -24,13 +24,20 @@
     --pen: #2143b5;
     --pen-dark: #17328c;
     --margin-red: #d9483b;
+    --font-ui: 'Golos Text Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-ui);
     background: var(--paper);
     min-height: 100vh;
+}
+
+button,
+input,
+select {
+    font-family: inherit;
 }
 
 @media print {
