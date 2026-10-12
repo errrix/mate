@@ -57,7 +57,7 @@ test.describe('generator settings', () => {
         await expect(page.locator('.settings-summary')).toContainText('Выберите возраст или включите действие');
         await page.getByRole('button', { name: 'Создать лист' }).click();
 
-        await expect(page.getByRole('alert')).toHaveText('Выберите хотя бы одну операцию');
+        await expect(page.getByRole('alert')).toHaveText('Включите хотя бы одно действие');
         await expect(page).toHaveURL(/\/generator$/);
 
         await page.getByRole('switch', { name: 'Сложение' }).click();
@@ -140,6 +140,35 @@ test.describe('generator settings', () => {
 
         await subtraction.locator('select').first().selectOption('2');
         await expect(subtraction.getByText('Числа с запятой')).toBeVisible();
+    });
+
+    test('offers hand-tuned settings back after an age preset replaces them', async ({ page }) => {
+        await seedSettings(page, { addition: { enabled: true, count: 7, digits: 3 } });
+        await page.goto('/');
+        await page.getByRole('button', { name: '8 лет' }).click();
+        await page.getByRole('button', { name: 'Назад к настройкам' }).click();
+
+        await expect(page.getByRole('status')).toContainText('Свои настройки заменены');
+        await page.getByRole('button', { name: 'Вернуть' }).click();
+
+        await expect(page.locator('.operation-card').first().locator('input[type="number"]')).toHaveValue('7');
+        await expect(page.locator('.operation-toggle[aria-checked="true"]')).toHaveCount(1);
+        await expect(page.getByRole('button', { name: 'Вернуть' })).toHaveCount(0);
+    });
+
+    test('folds switched-off operations and opens the sheet preview on a phone', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto('/generator');
+
+        await expect(page.locator('.operation-card.inactive .operation-settings').first()).toBeHidden();
+        await expect(page.locator('.settings-preview')).toBeHidden();
+
+        await page.getByRole('button', { name: 'Показать лист' }).click();
+        await expect(page.locator('.settings-preview .print-page')).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+
+        await page.getByRole('button', { name: 'Скрыть лист' }).click();
+        await expect(page.locator('.settings-preview')).toBeHidden();
     });
 });
 

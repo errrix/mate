@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, useExerciseStore } from '../store/exerciseStore';
-import { AGE_OPTIONS, applyAgePreset, findMatchingAge } from '../store/agePresets';
+import { AGE_OPTIONS, applyAgePreset, findMatchingAge, isCustomSettings } from '../store/agePresets';
 import {
     MAX_EXAMPLES_PER_OPERATION,
     generateExamplesFromSettings,
@@ -13,12 +13,13 @@ import { pluralize } from '../utils/pluralize';
 import './SettingsScreen.css';
 import './ExamplesScreen.css';
 
+// What the sheet for each preset contains.
 const AGE_HINTS = {
-    6: 'Счет в пределах 10, простое сложение и вычитание, сравнение чисел, работа с составом числа.',
-    7: 'Сложение и вычитание в пределах 20, переход через десяток, простые текстовые задачи.',
-    8: 'Сложение и вычитание двузначных чисел, первые примеры на умножение и деление.',
-    9: 'Таблица умножения, деление нацело, многозначные вычисления без сложных дробей.',
-    10: 'Уверенные действия с многозначными числами, умножение, деление и первые десятичные числа.'
+    6: 'Сложение и вычитание в пределах 10, примеры в строчку.',
+    7: 'Сложение и вычитание в пределах 20.',
+    8: 'Сложение и вычитание двузначных чисел в столбик, таблица умножения, деление двузначного числа на однозначное.',
+    9: 'Сложение и вычитание трёхзначных чисел, умножение двузначного на однозначное, деление трёхзначного на однозначное.',
+    10: 'Сложение с десятичными дробями, вычитание из четырёхзначных чисел, умножение трёхзначного на двузначное, деление на двузначное.'
 };
 
 const cloneDefaultSettings = () => ({
@@ -30,12 +31,6 @@ const cloneDefaultSettings = () => ({
 });
 
 const LIMIT_OPTION_PREFIX = 'limit-';
-
-const OPERATIONS = ['addition', 'subtraction', 'multiplication', 'division'];
-
-const isDefaultOperations = (settings) => OPERATIONS.every((operation) => (
-    JSON.stringify(settings[operation]) === JSON.stringify(DEFAULT_SETTINGS[operation])
-));
 
 const OPERATION_SIGNS = {
     addition: '+',
@@ -79,12 +74,14 @@ function buildSamples(settings, seed) {
 }
 
 export function SettingsScreen({ onGenerate }) {
-    const { settings, setSettings, seed } = useExerciseStore();
+    const { settings, setSettings, seed, replacedSettings, setReplacedSettings } = useExerciseStore();
     const [showOperationError, setShowOperationError] = useState(false);
     const [settingsBeforeReset, setSettingsBeforeReset] = useState(null);
     const [countNote, setCountNote] = useState({ operation: null, text: '' });
+    const [showSheet, setShowSheet] = useState(false);
     const resetButtonRef = useRef(null);
     const undoButtonRef = useRef(null);
+    const firstPresetRef = useRef(null);
     const focusAfterReset = useRef(null);
 
     // Reset and undo swap one control for the other; keep the keyboard focus on whichever is shown.
@@ -93,7 +90,7 @@ export function SettingsScreen({ onGenerate }) {
             focusAfterReset.current.current?.focus();
             focusAfterReset.current = null;
         }
-    }, [settingsBeforeReset]);
+    }, [settingsBeforeReset, replacedSettings]);
     const selectedAge = useMemo(() => findMatchingAge(settings), [settings]);
 
     const summary = useMemo(() => {
@@ -126,6 +123,7 @@ export function SettingsScreen({ onGenerate }) {
     // Any edit after a reset makes the old settings stale, so the undo offer goes away.
     const updateSettings = (updater) => {
         setSettingsBeforeReset(null);
+        setReplacedSettings(null);
         setSettings(updater);
     };
 
@@ -226,7 +224,19 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleAgeChange = (value) => {
-        updateSettings(prev => applyAgePreset(prev, Number(value)));
+        // A preset overwrites every operation, so hand-tuned settings stay one click away.
+        if (isCustomSettings(settings)) {
+            setReplacedSettings(settings);
+        }
+
+        setSettingsBeforeReset(null);
+        setSettings(prev => applyAgePreset(prev, Number(value)));
+    };
+
+    const handleRestoreReplaced = () => {
+        focusAfterReset.current = firstPresetRef;
+        setSettings(replacedSettings);
+        setReplacedSettings(null);
     };
 
     const handleReset = () => {
@@ -237,6 +247,7 @@ export function SettingsScreen({ onGenerate }) {
         }
 
         focusAfterReset.current = undoButtonRef;
+        setReplacedSettings(null);
         setSettingsBeforeReset(settings);
         setSettings(defaults);
     };
@@ -284,10 +295,11 @@ export function SettingsScreen({ onGenerate }) {
                     <section className="preset-panel" aria-labelledby="agePresetLabel">
                         <p id="agePresetLabel">Готовые настройки по возрасту</p>
                         <div className="preset-ages" role="group" aria-labelledby="agePresetLabel">
-                            {AGE_OPTIONS.map(age => (
+                            {AGE_OPTIONS.map((age, index) => (
                                 <button
                                     type="button"
                                     key={age}
+                                    ref={index === 0 ? firstPresetRef : undefined}
                                     className="preset-age"
                                     aria-pressed={selectedAge === age}
                                     onClick={() => handleAgeChange(age)}
@@ -296,12 +308,27 @@ export function SettingsScreen({ onGenerate }) {
                                 </button>
                             ))}
                         </div>
-                        {selectedAge === null && summary.operationsCount > 0 && !isDefaultOperations(settings) && (
+                        {isCustomSettings(settings) && summary.operationsCount > 0 && (
                             <span className="preset-custom">свои настройки</span>
+                        )}
+                        {replacedSettings && (
+                            <p className="settings-undo" role="status">
+                                Свои настройки заменены.{' '}
+                                <button type="button" onClick={handleRestoreReplaced}>Вернуть</button>
+                            </p>
                         )}
                     </section>
 
-                    <section className="operations-grid" aria-label="Операции">
+                    <div aria-live="polite">
+                        {selectedAge && (
+                            <section className="hint-panel">
+                                <h2>подсказка</h2>
+                                <p>Для {selectedAge} лет: {AGE_HINTS[selectedAge]}</p>
+                            </section>
+                        )}
+                    </div>
+
+                    <section className="operations-grid" aria-label="Действия">
                         <article className={renderCardClassName('addition')}>
                             <OperationHeader
                                 enabled={settings.addition.enabled}
@@ -517,15 +544,6 @@ export function SettingsScreen({ onGenerate }) {
                         </article>
                     </section>
 
-                    <div aria-live="polite">
-                        {selectedAge && (
-                            <section className="hint-panel">
-                                <h2>подсказка</h2>
-                                <p>Для {selectedAge} лет: {AGE_HINTS[selectedAge]}</p>
-                            </section>
-                        )}
-                    </div>
-
                     <div className="settings-options">
                         <label className="settings-print-answers">
                             <input
@@ -558,7 +576,7 @@ export function SettingsScreen({ onGenerate }) {
                     </div>
                 </div>
 
-                <aside className="settings-aside" aria-label="Что получится">
+                <aside className={`settings-aside${showSheet ? ' is-sheet-open' : ''}`} aria-label="Что получится">
                     <div className="settings-preview" aria-hidden="true">
                         <CssNotebookGrid placement={summary.firstSheet} />
                     </div>
@@ -581,9 +599,18 @@ export function SettingsScreen({ onGenerate }) {
                             </>
                         )}
                     </div>
+                    {/* Phones hide the preview by default; this opens it above the bar. */}
+                    <button
+                        type="button"
+                        className="settings-sheet-toggle"
+                        aria-expanded={showSheet}
+                        onClick={() => setShowSheet(open => !open)}
+                    >
+                        {showSheet ? 'Скрыть лист' : 'Показать лист'}
+                    </button>
                     <div className="settings-generate">
                         {showOperationError && summary.operationsCount === 0 && (
-                            <p className="settings-error" role="alert">Выберите хотя бы одну операцию</p>
+                            <p className="settings-error" role="alert">Включите хотя бы одно действие</p>
                         )}
                         <button type="submit" className="btn-primary">
                             Создать лист

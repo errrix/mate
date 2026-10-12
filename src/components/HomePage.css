@@ -146,6 +146,9 @@
 }
 
 .home-text-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
     color: var(--pen);
     font-weight: 700;
     text-decoration: underline;
@@ -177,7 +180,7 @@
 }
 
 .home-quick-ages button {
-    min-height: 42px;
+    min-height: 44px;
     padding: 8px 16px;
     border: 1.5px solid var(--rule-strong);
     border-radius: 8px;

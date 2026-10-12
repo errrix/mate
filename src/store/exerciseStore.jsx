@@ -111,6 +111,8 @@ function saveToStorage(key, value) {
 export function ExerciseStoreProvider({ children }) {
     const [settings, setSettings] = useState(loadSettings);
     const [seed, setSeed] = useState(loadSeed);
+    // Hand-tuned settings an age preset has just replaced, kept so the generator can offer them back.
+    const [replacedSettings, setReplacedSettings] = useState(null);
     const regenerateExamples = useCallback(() => setSeed(createSeed()), []);
 
     useEffect(() => {
@@ -135,8 +137,10 @@ export function ExerciseStoreProvider({ children }) {
         settings,
         setSettings,
         seed,
-        regenerateExamples
-    }), [settings, seed, regenerateExamples]);
+        regenerateExamples,
+        replacedSettings,
+        setReplacedSettings
+    }), [settings, seed, regenerateExamples, replacedSettings]);
 
     return (
         <ExerciseStoreContext.Provider value={value}>

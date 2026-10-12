@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AGE_OPTIONS, applyAgePreset } from '../store/agePresets';
+import { AGE_OPTIONS, applyAgePreset, isCustomSettings } from '../store/agePresets';
 import { useExerciseStore } from '../store/exerciseStore';
 import './HomePage.css';
 
@@ -45,7 +45,7 @@ const operations = [
 const steps = [
     {
         title: 'Выберите возраст',
-        text: 'От 6 до 10 лет — операции и величина чисел подставятся сами. Или настройте всё вручную.'
+        text: 'От 6 до 10 лет — действия и величина чисел подставятся сами. Или настройте всё вручную.'
     },
     {
         title: 'Посмотрите лист',
@@ -60,7 +60,7 @@ const steps = [
 const facts = [
     ['7 мм', 'клетка, как в школьной тетради'],
     ['А4', 'печатается на любом принтере'],
-    ['до 100', 'примеров на каждую операцию'],
+    ['до 100', 'примеров на каждое действие'],
     ['0', 'регистраций и отправленных данных']
 ];
 
@@ -161,9 +161,10 @@ function SheetPreview() {
 
 export function HomePage() {
     const navigate = useNavigate();
-    const { setSettings, regenerateExamples } = useExerciseStore();
+    const { settings, setSettings, regenerateExamples, setReplacedSettings } = useExerciseStore();
 
     const handleQuickStart = (age) => {
+        setReplacedSettings(isCustomSettings(settings) ? settings : null);
         setSettings(prev => applyAgePreset(prev, age));
         regenerateExamples();
         navigate('/result-list');
@@ -177,7 +178,7 @@ export function HomePage() {
                         <p className="home-note">математика на сегодня</p>
                         <h1>Примеры в столбик на листе в клетку</h1>
                         <p className="home-lead">
-                            Выберите возраст или операции — получится лист А4, расчерченный как тетрадь.
+                            Выберите возраст или действия — получится лист А4, расчерченный как тетрадь.
                             Остаётся распечатать и дать ребёнку ручку.
                         </p>
                         <div className="home-actions">

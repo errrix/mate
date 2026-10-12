@@ -129,9 +129,13 @@
     box-shadow: 4px 4px 0 var(--paper-line);
 }
 
-/* The title stays readable: it names what the switch would turn on. */
+/* A switched-off operation folds to its header; the title names what the switch turns on. */
 .operation-card.inactive .operation-settings {
-    opacity: 0.7;
+    display: none;
+}
+
+.operation-card.inactive .operation-header {
+    margin-bottom: 0;
 }
 
 .operation-card.inactive .operation-title {
@@ -256,7 +260,7 @@
     width: 100%;
     min-height: 44px;
     padding: 8px 10px;
-    border: 1.5px solid var(--rule-strong);
+    border: 1.5px solid var(--field-border);
     border-radius: 6px;
     background: var(--sheet);
     color: var(--ink);
@@ -321,7 +325,7 @@
 /* Hint: a note on the margin */
 .hint-panel {
     padding: 4px 0 4px 18px;
-    margin-top: 22px;
+    margin-bottom: 22px;
     border-left: 2px solid var(--margin-red);
 }
 
@@ -436,6 +440,10 @@
     font-size: 0.88rem;
 }
 
+.settings-sheet-toggle {
+    display: none;
+}
+
 .settings-generate {
     display: grid;
     gap: 8px;
@@ -466,9 +474,33 @@
         gap: 0;
     }
 
-    .settings-preview,
-    .settings-preview-note {
+    .settings-aside:not(.is-sheet-open) .settings-preview,
+    .settings-aside:not(.is-sheet-open) .settings-preview-note {
         display: none;
+    }
+
+    /* Opened from the bar: the sheet takes the upper part of the screen and scrolls if needed. */
+    .settings-preview {
+        width: min(100%, 300px);
+        max-height: 52vh;
+        margin: 0 auto;
+        overflow-y: auto;
+    }
+
+    .settings-sheet-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-self: start;
+        min-height: 44px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--pen);
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
     }
 
     .settings-aside {

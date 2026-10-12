@@ -61,6 +61,15 @@ function matchesPresetOperation(current, preset) {
     return Object.entries(preset).every(([field, value]) => current[field] === value);
 }
 
+// Settings the user tuned by hand: neither a preset nor the untouched defaults.
+export function isCustomSettings(settings) {
+    const isDefault = OPERATIONS.every((operation) => (
+        JSON.stringify(settings[operation]) === JSON.stringify(DEFAULT_SETTINGS[operation])
+    ));
+
+    return !isDefault && findMatchingAge(settings) === null;
+}
+
 export function findMatchingAge(settings) {
     return AGE_OPTIONS.find((age) => (
         OPERATIONS.every((operation) => (
