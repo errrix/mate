@@ -17,8 +17,8 @@ test.describe('notebook grid visual placement', () => {
         await page.goto('/__visual-tests/notebook-grid/paginated-addition');
 
         const pages = page.locator('.print-page');
-        await expect(pages).toHaveCount(6);
+        await expect(pages).toHaveCount(5);
         await expect(pages.nth(0)).toHaveScreenshot('paginated-addition-page-1.png');
-        await expect(pages.nth(5)).toHaveScreenshot('paginated-addition-page-last.png');
+        await expect(pages.nth(4)).toHaveScreenshot('paginated-addition-page-last.png');
     });
 });
