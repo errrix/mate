@@ -33,6 +33,8 @@ const cloneDefaultSettings = () => ({
 
 const LIMIT_OPTION_PREFIX = 'limit-';
 
+const COUNT_LABEL = `Количество (1–${MAX_EXAMPLES_PER_OPERATION})`;
+
 const OPERATIONS = ['addition', 'subtraction', 'multiplication', 'division'];
 
 const isDefaultOperations = (settings) => OPERATIONS.every((operation) => (
@@ -45,6 +47,11 @@ const OPERATION_SIGNS = {
     multiplication: '×',
     division: ':'
 };
+
+// Matches the sheet, which drops trailing zeroes of a fraction.
+function formatSampleNumber(number) {
+    return String(number).replace(/(,\d*?)0+$/, '$1').replace(/,$/, '');
+}
 
 // One example per enabled operation, so the cards show what the current settings produce.
 function buildSamples(settings, seed) {
@@ -67,7 +74,8 @@ function buildSamples(settings, seed) {
             }, seed + index);
             const numbers = example.numbers ?? [example.dividend, example.divisor];
 
-            return [operation, numbers.join(` ${OPERATION_SIGNS[operation]} `)];
+            // The sign sticks to the number after it, so a long sample wraps before the sign.
+            return [operation, numbers.map(formatSampleNumber).join(` ${OPERATION_SIGNS[operation]}\u00A0`)];
         } catch {
             return [operation, ''];
         }
@@ -77,6 +85,7 @@ function buildSamples(settings, seed) {
 export function SettingsScreen({ onGenerate }) {
     const { settings, setSettings, seed } = useExerciseStore();
     const [showOperationError, setShowOperationError] = useState(false);
+    const [settingsBeforeReset, setSettingsBeforeReset] = useState(null);
     const selectedAge = useMemo(() => findMatchingAge(settings), [settings]);
 
     const summary = useMemo(() => {
@@ -105,8 +114,14 @@ export function SettingsScreen({ onGenerate }) {
 
     const samples = useMemo(() => buildSamples(settings, seed), [settings, seed]);
 
+    // Any edit after a reset makes the old settings stale, so the undo offer goes away.
+    const updateSettings = (updater) => {
+        setSettingsBeforeReset(null);
+        setSettings(updater);
+    };
+
     const handleToggle = (operation) => {
-        setSettings(prev => ({
+        updateSettings(prev => ({
             ...prev,
             [operation]: {
                 ...prev[operation],
@@ -118,7 +133,7 @@ export function SettingsScreen({ onGenerate }) {
     const handleChange = (operation, field, value) => {
         const parsedValue = typeof value === 'boolean' ? value : Number(value);
 
-        setSettings(prev => ({
+        updateSettings(prev => ({
             ...prev,
             [operation]: {
                 ...prev[operation],
@@ -143,7 +158,7 @@ export function SettingsScreen({ onGenerate }) {
             ? Number(value.slice(LIMIT_OPTION_PREFIX.length))
             : 0;
 
-        setSettings(prev => ({
+        updateSettings(prev => ({
             ...prev,
             [operation]: { ...prev[operation], limit }
         }));
@@ -162,7 +177,7 @@ export function SettingsScreen({ onGenerate }) {
     const handleCountChange = (operation, value) => {
         const parsedCount = parseInt(value, 10);
 
-        setSettings(prev => ({
+        updateSettings(prev => ({
             ...prev,
             [operation]: {
                 ...prev[operation],
@@ -175,7 +190,7 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleCountBlur = (operation) => {
-        setSettings(prev => (
+        updateSettings(prev => (
             normalizeCount(prev[operation].count) >= 1
                 ? prev
                 : { ...prev, [operation]: { ...prev[operation], count: 1 } }
@@ -183,7 +198,7 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleOptionChange = (field, value) => {
-        setSettings(prev => ({
+        updateSettings(prev => ({
             ...prev,
             options: {
                 ...prev.options,
@@ -193,19 +208,38 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleAgeChange = (value) => {
-        setSettings(prev => applyAgePreset(prev, Number(value)));
+        updateSettings(prev => applyAgePreset(prev, Number(value)));
     };
 
     const handleReset = () => {
-        setSettings(cloneDefaultSettings());
+        const defaults = cloneDefaultSettings();
+
+        if (JSON.stringify(settings) === JSON.stringify(defaults)) {
+            return;
+        }
+
+        setSettingsBeforeReset(settings);
+        setSettings(defaults);
     };
 
-    const handleGenerate = () => {
+    const handleUndoReset = () => {
+        setSettings(settingsBeforeReset);
+        setSettingsBeforeReset(null);
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+
         if (!hasEnabledOperation(settings)) {
             setShowOperationError(true);
             return;
         }
 
+        // Enter can submit while a count field is still empty.
+        setSettings(prev => Object.fromEntries(Object.entries(prev).map(([key, value]) => [
+            key,
+            'count' in value && normalizeCount(value.count) < 1 ? { ...value, count: 1 } : value
+        ])));
         onGenerate();
     };
 
@@ -225,7 +259,7 @@ export function SettingsScreen({ onGenerate }) {
                 </div>
             </header>
 
-            <div className="settings-layout">
+            <form className="settings-layout" onSubmit={handleSubmit}>
                 <div className="settings-main">
                     <section className="preset-panel" aria-labelledby="agePresetLabel">
                         <p id="agePresetLabel">Готовые настройки по возрасту</p>
@@ -256,7 +290,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('addition')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label="Количество">
+                                <SettingGroup label={COUNT_LABEL}>
                                     <input
                                         type="number"
                                         min="1"
@@ -293,15 +327,18 @@ export function SettingsScreen({ onGenerate }) {
                                         <option value="5">5</option>
                                     </select>
                                 </SettingGroup>
-                                <label className="inline-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.addition.useDecimals && !settings.addition.limit}
-                                        disabled={!settings.addition.enabled || settings.addition.limit > 0}
-                                        onChange={(event) => handleChange('addition', 'useDecimals', event.target.checked)}
-                                    />
-                                    <span>Числа с запятой</span>
-                                </label>
+                                {/* Decimals do not apply to the "within N" ranges. */}
+                                {!settings.addition.limit && (
+                                    <label className="inline-checkbox">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.addition.useDecimals}
+                                            disabled={!settings.addition.enabled}
+                                            onChange={(event) => handleChange('addition', 'useDecimals', event.target.checked)}
+                                        />
+                                        <span>Числа с запятой</span>
+                                    </label>
+                                )}
                             </div>
                             <OperationSample text={samples.addition} />
                         </article>
@@ -314,7 +351,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('subtraction')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label="Количество">
+                                <SettingGroup label={COUNT_LABEL}>
                                     <input
                                         type="number"
                                         min="1"
@@ -341,25 +378,31 @@ export function SettingsScreen({ onGenerate }) {
                                 </SettingGroup>
                                 <SettingGroup label="Вычитаемое">
                                     <select
-                                        value={settings.subtraction.subtrahendDigits}
+                                        value={settings.subtraction.limit > 0 ? 'limit' : settings.subtraction.subtrahendDigits}
                                         disabled={!settings.subtraction.enabled || settings.subtraction.limit > 0}
                                         onChange={(event) => handleChange('subtraction', 'subtrahendDigits', event.target.value)}
                                     >
+                                        {settings.subtraction.limit > 0 && (
+                                            <option value="limit">До {settings.subtraction.limit}</option>
+                                        )}
                                         <option value="1">1–9</option>
                                         <option value="2" disabled={settings.subtraction.minuendDigits < 2}>10–99</option>
                                         <option value="3" disabled={settings.subtraction.minuendDigits < 3}>100–999</option>
                                         <option value="4" disabled={settings.subtraction.minuendDigits < 4}>1000–9999</option>
                                     </select>
                                 </SettingGroup>
-                                <label className="inline-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.subtraction.useDecimals && !settings.subtraction.limit}
-                                        disabled={!settings.subtraction.enabled || settings.subtraction.limit > 0}
-                                        onChange={(event) => handleChange('subtraction', 'useDecimals', event.target.checked)}
-                                    />
-                                    <span>Числа с запятой</span>
-                                </label>
+                                {/* Decimals do not apply to the "within N" ranges. */}
+                                {!settings.subtraction.limit && (
+                                    <label className="inline-checkbox">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.subtraction.useDecimals}
+                                            disabled={!settings.subtraction.enabled}
+                                            onChange={(event) => handleChange('subtraction', 'useDecimals', event.target.checked)}
+                                        />
+                                        <span>Числа с запятой</span>
+                                    </label>
+                                )}
                             </div>
                             <OperationSample text={samples.subtraction} />
                         </article>
@@ -372,7 +415,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('multiplication')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label="Количество">
+                                <SettingGroup label={COUNT_LABEL}>
                                     <input
                                         type="number"
                                         min="1"
@@ -417,7 +460,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('division')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label="Количество">
+                                <SettingGroup label={COUNT_LABEL}>
                                     <input
                                         type="number"
                                         min="1"
@@ -470,9 +513,16 @@ export function SettingsScreen({ onGenerate }) {
                             />
                             <span>Печатать ответы</span>
                         </label>
-                        <button type="button" className="btn-secondary" onClick={handleReset}>
-                            Сбросить настройки
-                        </button>
+                        {settingsBeforeReset ? (
+                            <p className="settings-undo" role="status">
+                                Настройки сброшены.{' '}
+                                <button type="button" onClick={handleUndoReset}>Вернуть</button>
+                            </p>
+                        ) : (
+                            <button type="button" className="btn-secondary" onClick={handleReset}>
+                                Сбросить настройки
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -503,12 +553,12 @@ export function SettingsScreen({ onGenerate }) {
                         {showOperationError && summary.operationsCount === 0 && (
                             <p className="settings-error" role="alert">Выберите хотя бы одну операцию</p>
                         )}
-                        <button type="button" className="btn-primary" onClick={handleGenerate}>
+                        <button type="submit" className="btn-primary">
                             Создать примеры
                         </button>
                     </div>
                 </aside>
-            </div>
+            </form>
         </div>
     );
 }

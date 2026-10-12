@@ -272,7 +272,6 @@
 }
 
 .inline-checkbox input:disabled + span {
-    opacity: 0.6;
     cursor: not-allowed;
 }
 
@@ -289,8 +288,7 @@
     color: var(--pen);
     font-family: var(--font-hand);
     font-size: 1.5rem;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 1.1;
 }
 
 /* Hint: a note on the margin */
@@ -347,6 +345,28 @@
     color: var(--ink);
     font-size: 0.95rem;
     font-weight: 700;
+    cursor: pointer;
+}
+
+.settings-undo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+}
+
+.settings-undo button {
+    min-height: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: var(--pen);
+    font-size: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
     cursor: pointer;
 }
 

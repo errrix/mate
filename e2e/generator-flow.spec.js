@@ -100,6 +100,44 @@ test.describe('generator settings', () => {
         await expect(count).toHaveValue('1');
         await expect(page.locator('.settings-summary')).toContainText('1 пример');
     });
+
+    test('creates the sheet with Enter and fills an empty count', async ({ page }) => {
+        await page.goto('/generator');
+        const count = page.locator('.operation-card').first().locator('input[type="number"]');
+
+        await count.fill('');
+        await count.press('Enter');
+
+        await expect(page).toHaveURL(/\/result-list$/);
+        await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(1);
+    });
+
+    test('offers to undo a reset until the next edit', async ({ page }) => {
+        await page.goto('/generator');
+        await page.getByRole('button', { name: '9 лет' }).click();
+        await page.getByRole('button', { name: 'Сбросить настройки' }).click();
+
+        await expect(page.getByRole('status')).toContainText('Настройки сброшены');
+        await page.getByRole('button', { name: 'Вернуть' }).click();
+        await expect(page.getByRole('button', { name: '9 лет' })).toHaveAttribute('aria-pressed', 'true');
+
+        await page.getByRole('button', { name: 'Сбросить настройки' }).click();
+        await page.getByRole('button', { name: 'Включить вычитание' }).click();
+        await expect(page.getByRole('button', { name: 'Вернуть' })).toHaveCount(0);
+    });
+
+    test('shows only the options that apply to a "within N" range', async ({ page }) => {
+        await page.goto('/generator');
+        await page.getByRole('button', { name: '6 лет' }).click();
+        const subtraction = page.locator('.operation-card').nth(1);
+
+        await expect(subtraction.locator('select').nth(1)).toBeDisabled();
+        await expect(subtraction.locator('select').nth(1).locator('option:checked')).toHaveText('До 10');
+        await expect(subtraction.getByText('Числа с запятой')).toHaveCount(0);
+
+        await subtraction.locator('select').first().selectOption('2');
+        await expect(subtraction.getByText('Числа с запятой')).toBeVisible();
+    });
 });
 
 test.describe('result sheet', () => {
@@ -183,8 +221,9 @@ test.describe('result sheet', () => {
         await createSheetForAge(page, 8);
 
         await expect.poll(async () => {
+            // The generator keeps a hidden preview sheet on phones, so wait for a visible one.
             const box = await page.locator('.print-page').first().boundingBox();
-            return box.x >= 0 && box.x + box.width <= 375;
+            return box !== null && box.x >= 0 && box.x + box.width <= 375;
         }).toBe(true);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     });
