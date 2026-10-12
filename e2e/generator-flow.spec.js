@@ -38,8 +38,23 @@ async function readExamples(page) {
 }
 
 test.describe('generator settings', () => {
-    test('asks for an operation before creating a sheet', async ({ page }) => {
+    test('creates a sheet on the first visit without any setup', async ({ page }) => {
         await page.goto('/generator');
+        const summary = page.locator('.settings-summary');
+
+        await expect(page.getByRole('button', { name: 'Выключить сложение' })).toBeVisible();
+        await expect(summary).toContainText('Будет создано: 10 примеров');
+        await expect(page.locator('.preset-custom')).toHaveCount(0);
+
+        await page.getByRole('button', { name: 'Создать примеры' }).click();
+        await expect(page).toHaveURL(/\/result-list$/);
+        await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(10);
+    });
+
+    test('asks for an operation before creating a sheet', async ({ page }) => {
+        await seedSettings(page, {});
+        await page.goto('/generator');
+        await expect(page.locator('.settings-summary')).toContainText('Выберите возраст или включите действие');
         await page.getByRole('button', { name: 'Создать примеры' }).click();
 
         await expect(page.getByRole('alert')).toHaveText('Выберите хотя бы одну операцию');
@@ -75,7 +90,6 @@ test.describe('generator settings', () => {
 
     test('keeps the example count between 1 and 100', async ({ page }) => {
         await page.goto('/generator');
-        await page.getByRole('button', { name: 'Включить сложение' }).click();
         const count = page.locator('.operation-card').first().locator('input[type="number"]');
 
         await count.fill('7777');
@@ -151,7 +165,8 @@ test.describe('result sheet', () => {
         await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(100);
     });
 
-    test('shows an empty state without settings', async ({ page }) => {
+    test('shows an empty state without enabled operations', async ({ page }) => {
+        await seedSettings(page, {});
         await page.goto('/result-list');
 
         await expect(page.getByRole('heading', { name: 'Лист ещё не создан' })).toBeVisible();

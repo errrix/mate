@@ -6,9 +6,10 @@ const SETTINGS_STORAGE_KEY = 'math-examples-generator.settings';
 const SEED_STORAGE_KEY = 'math-examples-generator.seed';
 const LEGACY_EXAMPLES_STORAGE_KEY = 'math-examples-generator.examples';
 
+// Addition starts enabled so a first visit can create a sheet right away.
 export const DEFAULT_SETTINGS = {
     addition: {
-        enabled: false,
+        enabled: true,
         count: 10,
         digits: 2,
         terms: 2,

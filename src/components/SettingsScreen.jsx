@@ -30,6 +30,12 @@ const cloneDefaultSettings = () => ({
 
 const LIMIT_OPTION_PREFIX = 'limit-';
 
+const OPERATIONS = ['addition', 'subtraction', 'multiplication', 'division'];
+
+const isDefaultOperations = (settings) => OPERATIONS.every((operation) => (
+    JSON.stringify(settings[operation]) === JSON.stringify(DEFAULT_SETTINGS[operation])
+));
+
 function pluralize(count, [one, few, many]) {
     const lastTwoDigits = count % 100;
     const lastDigit = count % 10;
@@ -267,7 +273,7 @@ export function SettingsScreen({ onGenerate }) {
                         </button>
                     ))}
                 </div>
-                {selectedAge === null && summary.operationsCount > 0 && (
+                {selectedAge === null && summary.operationsCount > 0 && !isDefaultOperations(settings) && (
                     <span className="preset-custom">свои настройки</span>
                 )}
             </section>
@@ -491,12 +497,21 @@ export function SettingsScreen({ onGenerate }) {
                     Сбросить настройки
                 </button>
                 <div className="settings-summary" aria-live="polite">
-                    <p>
-                        Будет создано: <strong>{summary.examplesCount}</strong>{' '}
-                        {pluralize(summary.examplesCount, ['пример', 'примера', 'примеров'])}
-                    </p>
-                    <span>Листов: {summary.pagesCount}</span>
-                    <span>Выбрано операций: {summary.operationsCount}</span>
+                    {summary.operationsCount === 0 ? (
+                        <>
+                            <p>Лист пока пустой</p>
+                            <span>Выберите возраст или включите действие</span>
+                        </>
+                    ) : (
+                        <>
+                            <p>
+                                Будет создано: <strong>{summary.examplesCount}</strong>{' '}
+                                {pluralize(summary.examplesCount, ['пример', 'примера', 'примеров'])}
+                            </p>
+                            <span>Листов: {summary.pagesCount}</span>
+                            <span>Выбрано операций: {summary.operationsCount}</span>
+                        </>
+                    )}
                     <label className="settings-print-answers">
                         <input
                             type="checkbox"
