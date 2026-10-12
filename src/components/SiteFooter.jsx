@@ -5,7 +5,7 @@ import './SiteFooter.css';
 export function SiteFooter() {
     return (
         <footer className="site-footer">
-            <span>© {new Date().getFullYear()} Математика. Печать заданий</span>
+            <span>© {new Date().getFullYear()} Математика на сегодня</span>
             <nav aria-label="Дополнительная навигация">
                 <Link to="/generator">Генератор</Link>
                 <Link to="/faq">Вопросы</Link>

@@ -65,7 +65,7 @@ export function ExamplesScreen({ onBack }) {
 
     return (
         <div className="screen active">
-            <h1 className="main-title">Математика</h1>
+            <h1 className="main-title">Лист готов</h1>
             <div className="result-toolbar">
                 <button type="button" className="btn-primary" onClick={() => window.print()}>
                     Напечатать {sheetsCount} {pluralize(sheetsCount, ['лист', 'листа', 'листов'])} А4

@@ -14,12 +14,12 @@ export function SiteHeader() {
             </Link>
 
             <nav className="site-nav" aria-label="Основная навигация">
-                <NavLink to="/how-it-works">Как подготовить лист</NavLink>
+                <NavLink to="/how-it-works">Как это работает</NavLink>
                 <NavLink to="/faq">Вопросы</NavLink>
             </nav>
 
             <div className="site-header-actions">
-                <Link className="site-cta" to="/generator">Начать</Link>
+                <Link className="site-cta" to="/generator">Создать лист</Link>
             </div>
         </header>
     );

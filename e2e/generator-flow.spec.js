@@ -26,7 +26,7 @@ async function seedSettings(page, overrides) {
 async function createSheetForAge(page, age) {
     await page.goto('/generator');
     await page.getByRole('button', { name: `${age} лет` }).click();
-    await page.getByRole('button', { name: 'Создать примеры' }).click();
+    await page.getByRole('button', { name: 'Создать лист' }).click();
     await expect(page).toHaveURL(/\/result-list$/);
 }
 
@@ -46,7 +46,7 @@ test.describe('generator settings', () => {
         await expect(summary).toContainText('Будет создано: 10 примеров');
         await expect(page.locator('.preset-custom')).toHaveCount(0);
 
-        await page.getByRole('button', { name: 'Создать примеры' }).click();
+        await page.getByRole('button', { name: 'Создать лист' }).click();
         await expect(page).toHaveURL(/\/result-list$/);
         await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(10);
     });
@@ -55,7 +55,7 @@ test.describe('generator settings', () => {
         await seedSettings(page, {});
         await page.goto('/generator');
         await expect(page.locator('.settings-summary')).toContainText('Выберите возраст или включите действие');
-        await page.getByRole('button', { name: 'Создать примеры' }).click();
+        await page.getByRole('button', { name: 'Создать лист' }).click();
 
         await expect(page.getByRole('alert')).toHaveText('Выберите хотя бы одну операцию');
         await expect(page).toHaveURL(/\/generator$/);
@@ -132,7 +132,7 @@ test.describe('generator settings', () => {
         const subtraction = page.locator('.operation-card').nth(1);
 
         await expect(subtraction.locator('select').nth(1)).toBeDisabled();
-        await expect(subtraction.locator('select').nth(1).locator('option:checked')).toHaveText('До 10');
+        await expect(subtraction.locator('select').nth(1).locator('option:checked')).toHaveText('В пределах 10');
         await expect(subtraction.getByText('Числа с запятой')).toHaveCount(0);
 
         await subtraction.locator('select').first().selectOption('2');
@@ -265,7 +265,7 @@ test.describe('site pages', () => {
         await page.getByRole('link', { name: 'Вопросы' }).first().click();
         await expect(page.getByRole('heading', { name: 'Вопросы и ответы' })).toBeVisible();
 
-        await page.getByRole('link', { name: 'Как подготовить лист' }).click();
+        await page.getByRole('link', { name: 'Как это работает' }).click();
         await expect(page.getByRole('heading', { name: 'Как это работает' })).toBeVisible();
 
         await page.goto('/no-such-page');

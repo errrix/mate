@@ -14,6 +14,16 @@ const NotebookGridVisualTestPage = import.meta.env.DEV
         .then((module) => ({ default: module.NotebookGridVisualTestPage })))
     : null;
 
+const SITE_NAME = 'Математика на сегодня';
+
+const PAGE_TITLES = {
+    '/': `${SITE_NAME} — примеры в столбик для печати`,
+    '/generator': `Настройка листа — ${SITE_NAME}`,
+    '/result-list': `Лист с примерами — ${SITE_NAME}`,
+    '/faq': `Вопросы и ответы — ${SITE_NAME}`,
+    '/how-it-works': `Как это работает — ${SITE_NAME}`
+};
+
 function App() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -22,6 +32,7 @@ function App() {
 
     useEffect(() => {
         window.scrollTo(0, 0);
+        document.title = PAGE_TITLES[location.pathname] ?? SITE_NAME;
     }, [location.pathname]);
 
     const handleGenerate = () => {

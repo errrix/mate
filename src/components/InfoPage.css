@@ -46,7 +46,12 @@
 }
 
 .info-item p {
+    max-width: var(--site-readable-max-width);
     margin-top: 8px;
     color: var(--ink-soft);
     line-height: 1.55;
+}
+
+.info-cta {
+    margin-top: 28px;
 }

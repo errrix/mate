@@ -21,8 +21,6 @@ const AGE_HINTS = {
     10: 'Уверенные действия с многозначными числами, умножение, деление и первые десятичные числа.'
 };
 
-const CUSTOM_SETTINGS_HINT = 'Выберите возраст, чтобы подставить готовые настройки, или настройте операции вручную.';
-
 const cloneDefaultSettings = () => ({
     addition: { ...DEFAULT_SETTINGS.addition },
     subtraction: { ...DEFAULT_SETTINGS.subtraction },
@@ -307,8 +305,8 @@ export function SettingsScreen({ onGenerate }) {
                                         disabled={!settings.addition.enabled}
                                         onChange={(event) => handleRangeChange('addition', 'digits', event.target.value)}
                                     >
-                                        <option value="limit-10">До 10</option>
-                                        <option value="limit-20">До 20</option>
+                                        <option value="limit-10">В пределах 10</option>
+                                        <option value="limit-20">В пределах 20</option>
                                         <option value="1">1–9</option>
                                         <option value="2">10–99</option>
                                         <option value="3">100–999</option>
@@ -368,8 +366,8 @@ export function SettingsScreen({ onGenerate }) {
                                         disabled={!settings.subtraction.enabled}
                                         onChange={(event) => handleRangeChange('subtraction', 'minuendDigits', event.target.value)}
                                     >
-                                        <option value="limit-10">До 10</option>
-                                        <option value="limit-20">До 20</option>
+                                        <option value="limit-10">В пределах 10</option>
+                                        <option value="limit-20">В пределах 20</option>
                                         <option value="1">1–9</option>
                                         <option value="2">10–99</option>
                                         <option value="3">100–999</option>
@@ -383,7 +381,7 @@ export function SettingsScreen({ onGenerate }) {
                                         onChange={(event) => handleChange('subtraction', 'subtrahendDigits', event.target.value)}
                                     >
                                         {settings.subtraction.limit > 0 && (
-                                            <option value="limit">До {settings.subtraction.limit}</option>
+                                            <option value="limit">В пределах {settings.subtraction.limit}</option>
                                         )}
                                         <option value="1">1–9</option>
                                         <option value="2" disabled={settings.subtraction.minuendDigits < 2}>10–99</option>
@@ -455,7 +453,7 @@ export function SettingsScreen({ onGenerate }) {
                         <article className={renderCardClassName('division')}>
                             <OperationHeader
                                 enabled={settings.division.enabled}
-                                symbol="÷"
+                                symbol=":"
                                 title="Деление"
                                 onToggle={() => handleToggle('division')}
                             />
@@ -497,12 +495,14 @@ export function SettingsScreen({ onGenerate }) {
                         </article>
                     </section>
 
-                    <section className="hint-panel" aria-live="polite">
-                        <div>
-                            <h2>подсказка</h2>
-                            <p>{selectedAge ? `Для ${selectedAge} лет: ${AGE_HINTS[selectedAge]}` : CUSTOM_SETTINGS_HINT}</p>
-                        </div>
-                    </section>
+                    <div aria-live="polite">
+                        {selectedAge && (
+                            <section className="hint-panel">
+                                <h2>подсказка</h2>
+                                <p>Для {selectedAge} лет: {AGE_HINTS[selectedAge]}</p>
+                            </section>
+                        )}
+                    </div>
 
                     <div className="settings-options">
                         <label className="settings-print-answers">
@@ -554,7 +554,7 @@ export function SettingsScreen({ onGenerate }) {
                             <p className="settings-error" role="alert">Выберите хотя бы одну операцию</p>
                         )}
                         <button type="submit" className="btn-primary">
-                            Создать примеры
+                            Создать лист
                         </button>
                     </div>
                 </aside>
