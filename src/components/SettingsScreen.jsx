@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, useExerciseStore } from '../store/exerciseStore';
 import { AGE_OPTIONS, applyAgePreset, findMatchingAge } from '../store/agePresets';
 import {
@@ -7,7 +7,7 @@ import {
     hasEnabledOperation,
     normalizeCount
 } from '../generators/generateExamplesFromSettings';
-import { buildNotebookPlacement } from '../features/notebookGrid/placement';
+import { buildNotebookPlacement, isAnswersOnlyPage } from '../features/notebookGrid/placement';
 import { CssNotebookGrid } from '../features/notebookGrid/renderers/CssNotebookGrid';
 import { pluralize } from '../utils/pluralize';
 import './SettingsScreen.css';
@@ -30,8 +30,6 @@ const cloneDefaultSettings = () => ({
 });
 
 const LIMIT_OPTION_PREFIX = 'limit-';
-
-const COUNT_LABEL = `Количество (1–${MAX_EXAMPLES_PER_OPERATION})`;
 
 const OPERATIONS = ['addition', 'subtraction', 'multiplication', 'division'];
 
@@ -84,6 +82,18 @@ export function SettingsScreen({ onGenerate }) {
     const { settings, setSettings, seed } = useExerciseStore();
     const [showOperationError, setShowOperationError] = useState(false);
     const [settingsBeforeReset, setSettingsBeforeReset] = useState(null);
+    const [countNote, setCountNote] = useState({ operation: null, text: '' });
+    const resetButtonRef = useRef(null);
+    const undoButtonRef = useRef(null);
+    const focusAfterReset = useRef(null);
+
+    // Reset and undo swap one control for the other; keep the keyboard focus on whichever is shown.
+    useEffect(() => {
+        if (focusAfterReset.current) {
+            focusAfterReset.current.current?.focus();
+            focusAfterReset.current = null;
+        }
+    }, [settingsBeforeReset]);
     const selectedAge = useMemo(() => findMatchingAge(settings), [settings]);
 
     const summary = useMemo(() => {
@@ -105,6 +115,7 @@ export function SettingsScreen({ onGenerate }) {
             operationsCount: enabledOperations.length,
             examplesCount,
             pagesCount: enabledOperations.length > 0 ? placement.pages.length : 0,
+            answerSheetsCount: placement.pages.filter(isAnswersOnlyPage).length,
             // The preview shows the first sheet only.
             firstSheet: { ...placement, pages: placement.pages.slice(0, 1) }
         };
@@ -175,6 +186,14 @@ export function SettingsScreen({ onGenerate }) {
     const handleCountChange = (operation, value) => {
         const parsedCount = parseInt(value, 10);
 
+        // Say why the typed number changed instead of correcting it silently.
+        setCountNote({
+            operation,
+            text: parsedCount > MAX_EXAMPLES_PER_OPERATION
+                ? `Не больше ${MAX_EXAMPLES_PER_OPERATION}`
+                : parsedCount < 1 ? 'Не меньше 1' : ''
+        });
+
         updateSettings(prev => ({
             ...prev,
             [operation]: {
@@ -188,6 +207,7 @@ export function SettingsScreen({ onGenerate }) {
     };
 
     const handleCountBlur = (operation) => {
+        setCountNote({ operation: null, text: '' });
         updateSettings(prev => (
             normalizeCount(prev[operation].count) >= 1
                 ? prev
@@ -216,11 +236,13 @@ export function SettingsScreen({ onGenerate }) {
             return;
         }
 
+        focusAfterReset.current = undoButtonRef;
         setSettingsBeforeReset(settings);
         setSettings(defaults);
     };
 
     const handleUndoReset = () => {
+        focusAfterReset.current = resetButtonRef;
         setSettings(settingsBeforeReset);
         setSettingsBeforeReset(null);
     };
@@ -288,7 +310,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('addition')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label={COUNT_LABEL}>
+                                <SettingGroup label="Количество" note={countNote.operation === 'addition' ? countNote.text : ''}>
                                     <input
                                         type="number"
                                         min="1"
@@ -349,7 +371,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('subtraction')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label={COUNT_LABEL}>
+                                <SettingGroup label="Количество" note={countNote.operation === 'subtraction' ? countNote.text : ''}>
                                     <input
                                         type="number"
                                         min="1"
@@ -413,7 +435,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('multiplication')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label={COUNT_LABEL}>
+                                <SettingGroup label="Количество" note={countNote.operation === 'multiplication' ? countNote.text : ''}>
                                     <input
                                         type="number"
                                         min="1"
@@ -458,7 +480,7 @@ export function SettingsScreen({ onGenerate }) {
                                 onToggle={() => handleToggle('division')}
                             />
                             <div className="operation-settings compact">
-                                <SettingGroup label={COUNT_LABEL}>
+                                <SettingGroup label="Количество" note={countNote.operation === 'division' ? countNote.text : ''}>
                                     <input
                                         type="number"
                                         min="1"
@@ -511,15 +533,25 @@ export function SettingsScreen({ onGenerate }) {
                                 checked={settings.options?.printAnswers === true}
                                 onChange={(event) => handleOptionChange('printAnswers', event.target.checked)}
                             />
-                            <span>Печатать ответы</span>
+                            <span>
+                                Печатать ответы
+                                {summary.answerSheetsCount > 0 && (
+                                    <small> — на отдельном листе</small>
+                                )}
+                            </span>
                         </label>
                         {settingsBeforeReset ? (
                             <p className="settings-undo" role="status">
                                 Настройки сброшены.{' '}
-                                <button type="button" onClick={handleUndoReset}>Вернуть</button>
+                                <button type="button" ref={undoButtonRef} onClick={handleUndoReset}>Вернуть</button>
                             </p>
                         ) : (
-                            <button type="button" className="btn-secondary" onClick={handleReset}>
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                ref={resetButtonRef}
+                                onClick={handleReset}
+                            >
                                 Сбросить настройки
                             </button>
                         )}
@@ -594,11 +626,12 @@ function OperationSample({ text }) {
     );
 }
 
-function SettingGroup({ label, children }) {
+function SettingGroup({ label, note, children }) {
     return (
         <label className="setting-group">
             <span>{label}</span>
             {children}
+            {note && <small className="setting-note" role="status">{note}</small>}
         </label>
     );
 }

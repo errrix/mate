@@ -601,6 +601,10 @@ function renderPageRows(pageRows, page, layout, operator) {
     return cells;
 }
 
+export function isAnswersOnlyPage(placementPage) {
+    return placementPage.cells.length === 0 && (placementPage.answers?.length ?? 0) > 0;
+}
+
 export function buildNotebookPlacement(items, operator, options = {}) {
     const page = options.page ?? DEFAULT_PAGE_MODEL;
     const layout = { ...DEFAULT_NOTEBOOK_LAYOUT, ...options.layout };

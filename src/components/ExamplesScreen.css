@@ -41,6 +41,28 @@
     background: var(--paper);
 }
 
+.result-print-hint {
+    max-width: 34em;
+    margin: 0 auto 12px;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.result-print-hint a {
+    color: var(--pen);
+    font-weight: 700;
+    text-underline-offset: 3px;
+}
+
+.result-print-answers small,
+.settings-print-answers small {
+    color: var(--ink-soft);
+    font-size: 0.88em;
+    font-weight: 400;
+}
+
 .button-group {
     display: flex;
     flex-wrap: wrap;
@@ -271,6 +293,19 @@
     border-left: var(--notebook-ink-line-width) solid #222;
 }
 
+/* A sheet that holds only answers is a plain list: no name field, grid or cut line. */
+.print-page-answers-only .print-page-header,
+.print-page-answers-only .notebook-css-lines {
+    visibility: hidden;
+}
+
+.print-page-answers-only .print-answers {
+    top: 0;
+    bottom: auto;
+    min-height: 0 !important;
+    border-top: 0;
+}
+
 /* Full width, so the grid ends cleanly at the cut line instead of framing the block. */
 .print-answers {
     position: absolute;
@@ -337,7 +372,8 @@
     }
 
     .button-group,
-    .result-toolbar {
+    .result-toolbar,
+    .result-print-hint {
         display: none !important;
     }
 

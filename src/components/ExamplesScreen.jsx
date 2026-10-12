@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { NotebookGrid } from '../features/notebookGrid/NotebookGrid';
-import { buildNotebookPlacement } from '../features/notebookGrid/placement';
+import { buildNotebookPlacement, isAnswersOnlyPage } from '../features/notebookGrid/placement';
 import { useExerciseStore } from '../store/exerciseStore';
 import { generateExamplesFromSettings } from '../generators/generateExamplesFromSettings';
 import { pluralize } from '../utils/pluralize';
@@ -29,6 +29,7 @@ export function ExamplesScreen({ onBack }) {
         [examples, printAnswers]
     );
     const sheetsCount = placement.pages.length;
+    const hasAnswerSheets = placement.pages.some(isAnswersOnlyPage);
 
     const handlePrintAnswersChange = (event) => {
         const { checked } = event.target;
@@ -71,6 +72,10 @@ export function ExamplesScreen({ onBack }) {
                     Напечатать {sheetsCount} {pluralize(sheetsCount, ['лист', 'листа', 'листов'])} А4
                 </button>
             </div>
+            <p className="result-print-hint">
+                В окне печати оставьте А4 и масштаб 100%, поля и колонтитулы отключите.{' '}
+                <Link to="/faq">Подробнее</Link>
+            </p>
             <div className="button-group">
                 <button type="button" className="btn-secondary" onClick={regenerateExamples}>
                     Другие примеры
@@ -81,7 +86,10 @@ export function ExamplesScreen({ onBack }) {
                         checked={printAnswers}
                         onChange={handlePrintAnswersChange}
                     />
-                    <span>Печатать ответы</span>
+                    <span>
+                        Печатать ответы
+                        {hasAnswerSheets && <small> — на отдельном листе</small>}
+                    </span>
                 </label>
                 <button type="button" className="result-back" onClick={onBack}>
                     Назад к настройкам

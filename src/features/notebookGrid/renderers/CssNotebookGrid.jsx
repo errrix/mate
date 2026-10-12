@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { isAnswersOnlyPage } from '../placement';
 
 const CSS_PX_PER_MM = 96 / 25.4;
 
@@ -62,7 +63,7 @@ export function CssNotebookGrid({ placement, pageNumberOffset = 0 }) {
         <div className="notebook-page-stack" ref={stackRef}>
             {pages.map((placementPage) => (
                 <div
-                    className="print-page print-page-css"
+                    className={`print-page print-page-css${isAnswersOnlyPage(placementPage) ? ' print-page-answers-only' : ''}`}
                     key={`page-${placementPage.number}`}
                     style={{ zoom: fitScale }}
                 >

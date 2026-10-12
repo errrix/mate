@@ -22,6 +22,8 @@
     --pen: #2143b5;
     --pen-dark: #17328c;
     --margin-red: #d9483b;
+    /* The margin red is too light for small text; messages use this darker ink. */
+    --error-ink: #b3352b;
     --font-ui: 'Golos Text Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
 }

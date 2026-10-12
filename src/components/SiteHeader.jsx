@@ -1,8 +1,13 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import './SiteHeader.css';
 
+// On these pages the sheet is already being made, so a second "create" button would do nothing.
+const PAGES_WITHOUT_CTA = ['/generator', '/result-list'];
+
 export function SiteHeader() {
+    const { pathname } = useLocation();
+
     return (
         <header className="site-header">
             <Link className="site-brand" to="/">
@@ -18,9 +23,11 @@ export function SiteHeader() {
                 <NavLink to="/faq">Вопросы</NavLink>
             </nav>
 
-            <div className="site-header-actions">
-                <Link className="site-cta" to="/generator">Создать лист</Link>
-            </div>
+            {!PAGES_WITHOUT_CTA.includes(pathname) && (
+                <div className="site-header-actions">
+                    <Link className="site-cta" to="/generator">Создать лист</Link>
+                </div>
+            )}
         </header>
     );
 }

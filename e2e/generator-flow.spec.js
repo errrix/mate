@@ -94,6 +94,7 @@ test.describe('generator settings', () => {
 
         await count.fill('7777');
         await expect(count).toHaveValue('100');
+        await expect(page.locator('.setting-note')).toHaveText('Не больше 100');
 
         await count.fill('');
         await count.blur();
@@ -118,8 +119,10 @@ test.describe('generator settings', () => {
         await page.getByRole('button', { name: 'Сбросить настройки' }).click();
 
         await expect(page.getByRole('status')).toContainText('Настройки сброшены');
+        await expect(page.getByRole('button', { name: 'Вернуть' })).toBeFocused();
         await page.getByRole('button', { name: 'Вернуть' }).click();
         await expect(page.getByRole('button', { name: '9 лет' })).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.getByRole('button', { name: 'Сбросить настройки' })).toBeFocused();
 
         await page.getByRole('button', { name: 'Сбросить настройки' }).click();
         await page.getByRole('switch', { name: 'Вычитание' }).click();
@@ -146,6 +149,8 @@ test.describe('result sheet', () => {
 
         await expect(page.locator('.print-page-footer')).toHaveText(['Лист 1', 'Лист 2']);
         await expect(page.getByRole('button', { name: 'Напечатать 2 листа А4' })).toBeVisible();
+        await expect(page.locator('.result-print-hint')).toContainText('масштаб 100%');
+        await expect(page.getByRole('link', { name: 'Создать лист' })).toHaveCount(0);
         await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(40);
 
         const firstSheet = (await readExamples(page))[0];
