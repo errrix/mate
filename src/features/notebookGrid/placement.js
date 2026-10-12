@@ -10,6 +10,33 @@ export const DEFAULT_NOTEBOOK_LAYOUT = {
     sidePaddingCols: 2
 };
 
+// Mirrors the .print-answers block in ExamplesScreen.css (sizes in mm).
+const ANSWER_BLOCK = {
+    columns: 4,
+    chromeHeightMm: 10.6,
+    lineHeightMm: 5.05
+};
+
+function getMaxValue(values, fallback = 0) {
+    return values.length === 0
+        ? fallback
+        : values.reduce((max, value) => Math.max(max, value), -Infinity);
+}
+
+function getAnswerRows(answersCount, page, layout) {
+    const answerLines = Math.ceil(answersCount / ANSWER_BLOCK.columns);
+    const requiredHeightMm = ANSWER_BLOCK.chromeHeightMm + answerLines * ANSWER_BLOCK.lineHeightMm;
+
+    return Math.max(layout.answerRows, Math.ceil(requiredHeightMm / page.cellSizeMm));
+}
+
+function getPageRowsHeight(rowsForPage, layout) {
+    return layout.topPaddingRows
+        + rowsForPage.reduce((total, row, index) => (
+            total + row.height + (index < rowsForPage.length - 1 ? row.advanceHeight - row.height : 0)
+        ), 0);
+}
+
 function parsePrintableNumberParts(number) {
     const text = String(number);
     const decimalMatch = text.match(/^(\d+)[,.](\d+)$/);
@@ -193,8 +220,8 @@ function normalizeDivisionWidths(parsedExamples) {
         return parsedExamples;
     }
 
-    const maxAnswerWidth = Math.max(...divisionExamples.map(({ parsed }) => parsed.answerWidth));
-    const maxHeight = Math.max(...divisionExamples.map(({ parsed }) => parsed.height));
+    const maxAnswerWidth = getMaxValue(divisionExamples.map(({ parsed }) => parsed.answerWidth));
+    const maxHeight = getMaxValue(divisionExamples.map(({ parsed }) => parsed.height));
 
     return parsedExamples.map((parsedExample) => {
         if (parsedExample.parsed.kind !== 'division') {
@@ -439,13 +466,11 @@ function appendVerticalCells(cells, parsed, operator, startRow, startCol) {
     }
 }
 
-function paginateRows(rows, page, layout, options) {
+function paginateRows(rows, page, layout) {
     const pages = [];
     let currentPageRows = [];
     let currentRowStart = layout.topPaddingRows;
-    const usableRows = options.printAnswers
-        ? page.rows - layout.answerRows
-        : page.rows;
+    const usableRows = page.rows;
 
     rows.forEach((row) => {
         const rowWouldOverflow = currentPageRows.length > 0
@@ -546,34 +571,34 @@ export function buildNotebookPlacement(items, operator, options = {}) {
     })));
 
     const rows = buildExampleRows(parsedExamples, page, layout);
-    const pageRows = paginateRows(rows, page, layout, placementOptions);
+    const pageRows = paginateRows(rows, page, layout);
     const answers = placementOptions.printAnswers
         ? examples.map(({ example, index }) => ({
             number: index + 1,
             value: getExampleAnswer(example)
         }))
         : [];
+    const answerRows = answers.length > 0 ? getAnswerRows(answers.length, page, layout) : 0;
+    const requiredRows = getMaxValue(
+        pageRows.map((rowsForPage) => getPageRowsHeight(rowsForPage, layout)),
+        layout.topPaddingRows
+    );
+
+    // Answers go under the last examples, or on a sheet of their own when there is no room left.
+    if (answerRows > 0 && getPageRowsHeight(pageRows[pageRows.length - 1], layout) + answerRows > page.rows) {
+        pageRows.push([]);
+    }
+
     const pages = pageRows.map((rowsForPage, index) => ({
         number: index + 1,
         cells: renderPageRows(rowsForPage, page, layout, operator),
         answers: index === pageRows.length - 1 ? answers : []
     }));
     const cells = pages.flatMap((placementPage) => placementPage.cells);
-    const requiredRows = pageRows.length === 0
-        ? layout.topPaddingRows
-        : Math.max(...pageRows.map((rowsForPage) => (
-            layout.topPaddingRows
-            + rowsForPage.reduce((total, row, index) => (
-                total + row.height + (index < rowsForPage.length - 1 ? row.advanceHeight - row.height : 0)
-            ), 0)
-        )));
     const requiredCols = cells.length > 0
-        ? Math.max(...cells.map((cell) => cell.col)) + 1
+        ? getMaxValue(cells.map((cell) => cell.col)) + 1
         : page.cols;
-    const usableRows = placementOptions.printAnswers
-        ? page.rows - layout.answerRows
-        : page.rows;
-    const rowTooTall = rows.some((row) => layout.topPaddingRows + row.height > usableRows);
+    const rowTooTall = rows.some((row) => layout.topPaddingRows + row.height > page.rows);
 
     return {
         page,
@@ -581,6 +606,7 @@ export function buildNotebookPlacement(items, operator, options = {}) {
         options: placementOptions,
         pages,
         answers,
+        answerRows,
         cells,
         overflow: rowTooTall || requiredCols > page.cols,
         requiredRows,

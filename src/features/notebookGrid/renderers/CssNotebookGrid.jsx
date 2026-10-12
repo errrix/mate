@@ -1,4 +1,31 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+const CSS_PX_PER_MM = 96 / 25.4;
+
+// Shrinks the A4 sheet to the available width on screen; print resets it in CSS.
+function useFitScale(pageWidthMm) {
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+
+    useEffect(() => {
+        const container = containerRef.current;
+
+        if (!container || typeof ResizeObserver === 'undefined') {
+            return undefined;
+        }
+
+        const pageWidthPx = pageWidthMm * CSS_PX_PER_MM;
+        const observer = new ResizeObserver(([entry]) => {
+            setScale(Math.min(1, entry.contentRect.width / pageWidthPx));
+        });
+
+        observer.observe(container);
+
+        return () => observer.disconnect();
+    }, [pageWidthMm]);
+
+    return [containerRef, scale];
+}
 
 function itemClassName(cell) {
     return `notebook-overlay-item notebook-overlay-${cell.kind}`;
@@ -22,13 +49,16 @@ export function CssNotebookGrid({ placement }) {
     const pages = placement.pages ?? [{ number: 1, cells: placement.cells }];
     const verticalLines = Array.from({ length: page.cols + 1 }, (_, col) => col);
     const horizontalLines = Array.from({ length: page.rows + 1 }, (_, row) => row);
+    const answerRows = placement.answerRows ?? placement.layout.answerRows;
+    const [stackRef, fitScale] = useFitScale(page.pageWidthMm);
 
     return (
-        <div className="notebook-page-stack">
+        <div className="notebook-page-stack" ref={stackRef}>
             {pages.map((placementPage) => (
                 <div
                     className="print-page print-page-css"
                     key={`page-${placementPage.number}`}
+                    style={{ zoom: fitScale }}
                 >
                     <header className="print-page-header">
                         <div className="print-page-field">
@@ -80,7 +110,7 @@ export function CssNotebookGrid({ placement }) {
                         {placementPage.answers?.length > 0 && (
                             <section
                                 className="print-answers"
-                                style={{ minHeight: `calc(${placement.layout.answerRows} * var(--notebook-cell-size))` }}
+                                style={{ minHeight: `calc(${answerRows} * var(--notebook-cell-size))` }}
                                 aria-label="Ответы"
                             >
                                 <h3>Ответы</h3>

@@ -87,7 +87,9 @@ Division examples render a long-division corner on the shared grid. The dividend
 
 When examples do not fit on one sheet, placement creates additional `pages` instead of scaling the grid. `overflow` is reserved for content that cannot fit within one page row band or exceeds available columns.
 
-When `printAnswers` is true, placement reserves `layout.answerRows` at the bottom of the last page and attaches `answers` to that page. The renderer draws a dashed cut line and a compact answer list in that reserved area.
+When `printAnswers` is true, placement attaches `answers` to the last page and reports the reserved height as `answerRows`: at least `layout.answerRows`, more when the answer list needs it. If the answers do not fit under the last examples, placement adds one more page that holds only the answers. The renderer draws a dashed cut line and a compact answer list in that reserved area.
+
+On screen the renderer scales each sheet down to the available width; print always uses the full A4 size.
 
 ## Rendering
 

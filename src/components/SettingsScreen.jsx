@@ -1,6 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { DEFAULT_SETTINGS, useExerciseStore } from '../store/exerciseStore';
-import { generateExamplesFromSettings } from '../generators/generateExamplesFromSettings';
+import {
+    MAX_EXAMPLES_PER_OPERATION,
+    generateExamplesFromSettings,
+    normalizeCount
+} from '../generators/generateExamplesFromSettings';
 import { buildNotebookPlacement } from '../features/notebookGrid/placement';
 import './SettingsScreen.css';
 
@@ -49,7 +53,7 @@ export function SettingsScreen({ onGenerate }) {
         const enabledOperations = ['addition', 'subtraction', 'multiplication', 'division']
             .map((operation) => settings[operation])
             .filter(operation => operation.enabled);
-        const examplesCount = enabledOperations.reduce((total, operation) => total + Number(operation.count || 0), 0);
+        const examplesCount = enabledOperations.reduce((total, operation) => total + normalizeCount(operation.count), 0);
         let pagesCount = 0;
 
         try {
@@ -101,6 +105,29 @@ export function SettingsScreen({ onGenerate }) {
                     : {})
             }
         }));
+    };
+
+    const handleCountChange = (operation, value) => {
+        const parsedCount = parseInt(value, 10);
+
+        setSettings(prev => ({
+            ...prev,
+            [operation]: {
+                ...prev[operation],
+                // An empty field stays empty while typing; handleCountBlur restores it.
+                count: Number.isNaN(parsedCount)
+                    ? ''
+                    : Math.min(Math.max(parsedCount, 1), MAX_EXAMPLES_PER_OPERATION)
+            }
+        }));
+    };
+
+    const handleCountBlur = (operation) => {
+        setSettings(prev => (
+            normalizeCount(prev[operation].count) >= 1
+                ? prev
+                : { ...prev, [operation]: { ...prev[operation], count: 1 } }
+        ));
     };
 
     const handleOptionChange = (field, value) => {
@@ -163,10 +190,11 @@ export function SettingsScreen({ onGenerate }) {
                             <input
                                 type="number"
                                 min="1"
-                                max="100"
+                                max={MAX_EXAMPLES_PER_OPERATION}
                                 value={settings.addition.count}
                                 disabled={!settings.addition.enabled}
-                                onChange={(event) => handleChange('addition', 'count', event.target.value)}
+                                onChange={(event) => handleCountChange('addition', event.target.value)}
+                                onBlur={() => handleCountBlur('addition')}
                             />
                         </SettingGroup>
                         <SettingGroup label="Разрядность">
@@ -218,10 +246,11 @@ export function SettingsScreen({ onGenerate }) {
                             <input
                                 type="number"
                                 min="1"
-                                max="100"
+                                max={MAX_EXAMPLES_PER_OPERATION}
                                 value={settings.subtraction.count}
                                 disabled={!settings.subtraction.enabled}
-                                onChange={(event) => handleChange('subtraction', 'count', event.target.value)}
+                                onChange={(event) => handleCountChange('subtraction', event.target.value)}
+                                onBlur={() => handleCountBlur('subtraction')}
                             />
                         </SettingGroup>
                         <SettingGroup label="Уменьшаемое">
@@ -273,10 +302,11 @@ export function SettingsScreen({ onGenerate }) {
                             <input
                                 type="number"
                                 min="1"
-                                max="100"
+                                max={MAX_EXAMPLES_PER_OPERATION}
                                 value={settings.multiplication.count}
                                 disabled={!settings.multiplication.enabled}
-                                onChange={(event) => handleChange('multiplication', 'count', event.target.value)}
+                                onChange={(event) => handleCountChange('multiplication', event.target.value)}
+                                onBlur={() => handleCountBlur('multiplication')}
                             />
                         </SettingGroup>
                         <SettingGroup label="Первый множитель">
@@ -317,10 +347,11 @@ export function SettingsScreen({ onGenerate }) {
                             <input
                                 type="number"
                                 min="1"
-                                max="100"
+                                max={MAX_EXAMPLES_PER_OPERATION}
                                 value={settings.division.count}
                                 disabled={!settings.division.enabled}
-                                onChange={(event) => handleChange('division', 'count', event.target.value)}
+                                onChange={(event) => handleCountChange('division', event.target.value)}
+                                onBlur={() => handleCountBlur('division')}
                             />
                         </SettingGroup>
                         <SettingGroup label="Делимое">

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { normalizeCount } from '../generators/generateExamplesFromSettings';
 
 const SETTINGS_STORAGE_KEY = 'math-examples-generator.settings';
 const LEGACY_EXAMPLES_STORAGE_KEY = 'math-examples-generator.examples';
@@ -43,15 +44,21 @@ function mergeSettings(defaultSettings, savedSettings) {
     }
 
     return Object.fromEntries(
-        Object.entries(defaultSettings).map(([operation, defaults]) => [
-            operation,
-            {
+        Object.entries(defaultSettings).map(([operation, defaults]) => {
+            const merged = {
                 ...defaults,
                 ...(savedSettings[operation] && typeof savedSettings[operation] === 'object'
                     ? savedSettings[operation]
                     : {})
-            }
-        ])
+            };
+
+            return [
+                operation,
+                'count' in merged
+                    ? { ...merged, count: Math.max(1, normalizeCount(merged.count)) }
+                    : merged
+            ];
+        })
     );
 }
 

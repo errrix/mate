@@ -81,6 +81,7 @@
 
 .notebook-page-stack {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
 }
 
@@ -254,18 +255,9 @@
     margin-top: 0;
 }
 
-@media (max-width: 1000px) {
-    .print-page {
-        transform: scale(0.75);
-        transform-origin: top center;
-        margin-bottom: -74mm;
-    }
-}
-
-@media (max-width: 760px) {
-    .print-page {
-        transform: scale(0.55);
-        margin-bottom: -134mm;
+@media screen and (max-width: 760px) {
+    .screen.active:not(.settings-screen) {
+        padding: 16px 8px !important;
     }
 }
 
@@ -331,6 +323,7 @@
         margin: 0 !important;
         box-shadow: none !important;
         transform: none !important;
+        zoom: 1 !important;
         break-after: page;
         page-break-after: always;
     }

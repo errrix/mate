@@ -3,6 +3,11 @@ import { generateAddition } from './additionGenerator';
 import { generateSubtraction } from './subtractionGenerator';
 import { generateMultiplication } from './multiplicationGenerator';
 import { generateDivision } from './divisionGenerator';
+import {
+    MAX_EXAMPLES_PER_OPERATION,
+    generateExamplesFromSettings,
+    normalizeCount
+} from './generateExamplesFromSettings';
 
 function expectDigits(value, digits) {
     const min = 10 ** (digits - 1);
@@ -112,5 +117,31 @@ describe('generateDivision', () => {
 
     test('throws when divisor digits cannot fit into dividend digits', () => {
         expect(() => generateDivision(1, 1, 3)).toThrow(RangeError);
+    });
+});
+
+describe('generateExamplesFromSettings', () => {
+    const settings = {
+        addition: { enabled: true, count: 10, digits: 2, terms: 2, useDecimals: false },
+        subtraction: { enabled: false, count: 10, minuendDigits: 2, subtrahendDigits: 2, useDecimals: false },
+        multiplication: { enabled: false, count: 10, firstDigits: 2, secondDigits: 2 },
+        division: { enabled: false, count: 10, dividendDigits: 3, divisorDigits: 1 }
+    };
+
+    test('normalizes counts to whole numbers within the allowed range', () => {
+        expect(normalizeCount('')).toBe(0);
+        expect(normalizeCount('abc')).toBe(0);
+        expect(normalizeCount(-5)).toBe(0);
+        expect(normalizeCount('2.7')).toBe(2);
+        expect(normalizeCount(5000)).toBe(MAX_EXAMPLES_PER_OPERATION);
+    });
+
+    test('caps the number of examples per operation', () => {
+        const examples = generateExamplesFromSettings({
+            ...settings,
+            addition: { ...settings.addition, count: 5000 }
+        });
+
+        expect(examples).toHaveLength(MAX_EXAMPLES_PER_OPERATION);
     });
 });

@@ -103,6 +103,30 @@ describe('notebook placement', () => {
         expect(placement.pages[0].answers).toEqual(placement.answers);
     });
 
+    test('keeps the answer block clear of examples', () => {
+        const items = Array.from({ length: 100 }, (_, index) => ({
+            example: { numbers: ['1234,56', '7890,12'], type: 'addition' },
+            index
+        }));
+        const placement = buildNotebookPlacement(items, '+', { printAnswers: true });
+        const lastPage = placement.pages[placement.pages.length - 1];
+        const lowestRow = Math.max(-1, ...lastPage.cells.map((cell) => cell.row));
+
+        expect(lastPage.answers).toHaveLength(100);
+        expect(placement.answerRows).toBeGreaterThan(placement.layout.answerRows);
+        expect(lowestRow).toBeLessThan(placement.page.rows - placement.answerRows);
+        expect(placement.pages.slice(0, -1).every((page) => page.answers.length === 0)).toBe(true);
+    });
+
+    test('builds placement for a very large number of examples', () => {
+        const items = Array.from({ length: 5000 }, (_, index) => ({
+            example: { numbers: ['1234,56', '7890,12', '3456,78', '9012,34', '5678,91'], type: 'addition' },
+            index
+        }));
+
+        expect(() => buildNotebookPlacement(items, '+')).not.toThrow();
+    });
+
     test('places mixed one- and two-digit subtraction in a single row', () => {
         const placement = buildNotebookPlacement(
             [{ example: { numbers: [12, 7], type: 'subtraction' }, index: 0 }],
