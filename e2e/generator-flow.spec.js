@@ -74,11 +74,11 @@ test.describe('generator settings', () => {
 
         await ageButton(6).click();
         await expect(summary).toContainText('20 примеров');
-        await expect(summary).toContainText('Выбрано операций: 2');
+        await expect(page.locator('.operation-toggle[aria-pressed="true"]')).toHaveCount(2);
 
         await ageButton(8).click();
         await expect(summary).toContainText('40 примеров');
-        await expect(summary).toContainText('Выбрано операций: 4');
+        await expect(page.locator('.operation-toggle[aria-pressed="true"]')).toHaveCount(4);
 
         await page.reload();
         await expect(ageButton(8)).toHaveAttribute('aria-pressed', 'true');
@@ -107,7 +107,7 @@ test.describe('result sheet', () => {
         await createSheetForAge(page, 8);
 
         await expect(page.locator('.print-page-footer')).toHaveText(['Лист 1', 'Лист 2']);
-        await expect(page.locator('.result-sheet-count')).toHaveText('На печать уйдёт 2 листа А4');
+        await expect(page.getByRole('button', { name: 'Напечатать 2 листа А4' })).toBeVisible();
         await expect(page.locator('.notebook-overlay-example-number')).toHaveCount(40);
 
         const firstSheet = (await readExamples(page))[0];

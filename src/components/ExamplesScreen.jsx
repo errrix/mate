@@ -66,15 +66,14 @@ export function ExamplesScreen({ onBack }) {
     return (
         <div className="screen active">
             <h1 className="main-title">Математика</h1>
-            <div className="button-group">
+            <div className="result-toolbar">
                 <button type="button" className="btn-primary" onClick={() => window.print()}>
-                    Печать
+                    Напечатать {sheetsCount} {pluralize(sheetsCount, ['лист', 'листа', 'листов'])} А4
                 </button>
+            </div>
+            <div className="button-group">
                 <button type="button" className="btn-secondary" onClick={regenerateExamples}>
                     Другие примеры
-                </button>
-                <button type="button" className="btn-secondary" onClick={onBack}>
-                    Назад к настройкам
                 </button>
                 <label className="result-print-answers">
                     <input
@@ -84,10 +83,10 @@ export function ExamplesScreen({ onBack }) {
                     />
                     <span>Печатать ответы</span>
                 </label>
+                <button type="button" className="result-back" onClick={onBack}>
+                    Назад к настройкам
+                </button>
             </div>
-            <p className="result-sheet-count">
-                На печать уйдёт {sheetsCount} {pluralize(sheetsCount, ['лист', 'листа', 'листов'])} А4
-            </p>
             <NotebookGrid placement={placement} />
         </div>
     );

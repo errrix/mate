@@ -315,25 +315,67 @@
     line-height: 1.5;
 }
 
-/* Footer */
-.settings-footer {
+/* Layout: settings on the left, the sheet they produce on the right */
+.settings-layout {
     display: grid;
-    grid-template-columns: minmax(180px, 1fr) auto minmax(220px, 1fr);
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: start;
+    gap: 28px;
+}
+
+.settings-main {
+    min-width: 0;
+    container-type: inline-size;
+}
+
+.settings-options {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 18px;
+    justify-content: space-between;
+    gap: 12px 18px;
     padding-top: 20px;
     margin-top: 24px;
     border-top: 1px solid var(--rule);
 }
 
+.settings-print-answers {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.settings-aside {
+    position: sticky;
+    top: 16px;
+    display: grid;
+    gap: 12px;
+}
+
+/* The page shadow needs room; the sheet scales itself to this width. */
+.settings-preview {
+    padding: 0 10px;
+}
+
+.settings-preview-note {
+    color: var(--ink-soft);
+    font-size: 0.84rem;
+    line-height: 1.4;
+    text-align: center;
+}
+
 .settings-summary {
-    min-width: 180px;
     color: var(--ink-soft);
     text-align: center;
 }
 
 .settings-summary p {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     color: var(--ink);
 }
 
@@ -347,21 +389,8 @@
     font-size: 0.88rem;
 }
 
-.settings-print-answers {
-    margin-top: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: var(--ink);
-    font-size: 0.92rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-
 .settings-generate {
     display: grid;
-    justify-self: end;
     gap: 8px;
 }
 
@@ -369,42 +398,54 @@
     color: var(--margin-red);
     font-size: 0.92rem;
     font-weight: 700;
-    text-align: right;
+    text-align: center;
 }
 
 .settings-screen .btn-primary {
-    min-width: 220px;
+    width: 100%;
     min-height: 50px;
 }
 
-.settings-screen .btn-secondary {
-    justify-self: start;
-    min-width: 190px;
+@container (max-width: 700px) {
+    .operations-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
-@media (max-width: 900px) {
-    .operations-grid,
-    .settings-footer {
+/* Narrow screens: the sheet preview gives way to a summary bar that stays in reach. */
+@media (max-width: 979px) {
+    .settings-layout {
         grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+
+    .settings-preview,
+    .settings-preview-note {
+        display: none;
+    }
+
+    .settings-aside {
+        top: auto;
+        bottom: 0;
+        z-index: 5;
+        gap: 8px;
+        margin: 20px -30px -30px;
+        padding: 12px 30px calc(12px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--rule-strong);
+        background: var(--sheet);
     }
 
     .settings-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 2px 12px;
         text-align: left;
     }
 
-    .settings-print-answers {
-        justify-content: flex-start;
-    }
-
-    .settings-generate,
-    .settings-screen .btn-primary,
-    .settings-screen .btn-secondary {
-        justify-self: stretch;
-        width: 100%;
-    }
-
-    .settings-error {
-        text-align: left;
+    .settings-summary p {
+        margin: 0;
     }
 }
 
@@ -415,5 +456,9 @@
 
     .operation-card {
         padding: 16px 14px 14px;
+    }
+
+    .settings-options .btn-secondary {
+        width: 100%;
     }
 }

@@ -5,7 +5,8 @@
     background: white;
     border-radius: 0;
     box-shadow: none;
-    overflow: hidden;
+    /* clip, not hidden: hidden would turn the shell into a scroll container and break sticky bars. */
+    overflow: clip;
 }
 
 .app-main {
