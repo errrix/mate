@@ -34,6 +34,7 @@ The current visual tests render dev-only routes:
 ```text
 /__visual-tests/notebook-grid/small-horizontal
 /__visual-tests/notebook-grid/vertical-arithmetic
+/__visual-tests/notebook-grid/decimal-addition
 /__visual-tests/notebook-grid/paginated-addition
 ```
 

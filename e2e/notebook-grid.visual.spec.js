@@ -13,6 +13,15 @@ test.describe('notebook grid visual placement', () => {
         await expect(page.locator('.print-page')).toHaveScreenshot('vertical-arithmetic.png');
     });
 
+    test('renders decimal addition alignment', async ({ page }) => {
+        await page.goto('/__visual-tests/notebook-grid/decimal-addition');
+
+        // A comma is only a few dozen pixels, far below the default ratio threshold.
+        await expect(page.locator('.print-page')).toHaveScreenshot('decimal-addition.png', {
+            maxDiffPixels: 20
+        });
+    });
+
     test('renders overflowing examples on the next print page', async ({ page }) => {
         await page.goto('/__visual-tests/notebook-grid/paginated-addition');
 

@@ -210,10 +210,23 @@
 
 .notebook-decimal-separator {
     position: absolute;
-    left: calc(var(--notebook-cell-size) * 0.79);
-    top: calc(var(--notebook-cell-size) * 0.58);
-    font-size: calc(var(--notebook-cell-size) * 0.56);
-    line-height: 1;
+    left: calc(var(--notebook-cell-size) * 0.76);
+    top: calc(var(--notebook-cell-size) * 0.53);
+    width: calc(var(--notebook-cell-size) * 0.2);
+    height: calc(var(--notebook-cell-size) * 0.32);
+}
+
+.notebook-decimal-separator svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+/* Keeps the comma in copied text and for screen readers. */
+.notebook-decimal-separator-text {
+    position: absolute;
+    font-size: 0;
 }
 
 .notebook-overlay-line {

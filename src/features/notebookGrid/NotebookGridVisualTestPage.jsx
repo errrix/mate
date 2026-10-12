@@ -31,6 +31,17 @@ const visualCases = {
             { example: { numbers: ['426,30', '607,3'], type: 'addition' }, index: 3 }
         ]
     },
+    'decimal-addition': {
+        title: 'Десятичные дроби',
+        operator: '+',
+        printAnswers: true,
+        items: [
+            { example: { numbers: ['516,37', '119,2'], type: 'addition' }, index: 0 },
+            { example: { numbers: ['12,5', '7,25', '0,5'], type: 'addition' }, index: 1 },
+            { example: { numbers: ['1033,6', '8,04'], type: 'addition' }, index: 2 },
+            { example: { numbers: ['41,1', '77,7'], type: 'addition' }, index: 3 }
+        ]
+    },
     'paginated-addition': {
         title: 'Много примеров',
         operator: '+',

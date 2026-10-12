@@ -39,7 +39,13 @@ function renderItemValue(cell) {
     return (
         <>
             <span>{cell.value}</span>
-            <span className="notebook-decimal-separator">,</span>
+            {/* Drawn as a shape: the monospace comma glyph is too thin to survive print. */}
+            <span className="notebook-decimal-separator">
+                <span className="notebook-decimal-separator-text">,</span>
+                <svg viewBox="0 0 10 16" aria-hidden="true">
+                    <path d="M5.5 1A3.7 3.7 0 0 1 9.2 4.7C9.2 9 6.8 12.6 3 14.6L2.1 13.3C4.1 12.1 5.4 10.4 5.7 8.4A3.7 3.7 0 0 1 5.5 1Z" />
+                </svg>
+            </span>
         </>
     );
 }
